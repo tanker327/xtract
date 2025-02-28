@@ -8,6 +8,7 @@ A Python library for extracting data from X (formerly Twitter) posts.
 - Extract user information
 - Support for quoted posts
 - Save data as JSON
+- Generate Markdown summaries of posts
 - Command-line interface
 
 ## Installation
@@ -73,14 +74,52 @@ Both methods will retrieve the same post. The URL format supports various variat
 - URLs with query parameters
 - URLs with additional path segments
 
+### Converting Posts to Markdown
+
+You can convert a post to Markdown format:
+
+```python
+from xtract import download_x_post, post_to_markdown, save_post_as_markdown
+
+# Download a post
+post = download_x_post("1895573480835539451")
+
+# Convert to Markdown string
+markdown_content = post_to_markdown(post)
+print(markdown_content)
+
+# Save as Markdown file
+markdown_path = save_post_as_markdown(post, output_dir="output")
+print(f"Markdown saved to: {markdown_path}")
+```
+
+The Markdown output includes:
+- Post text and creation date
+- Author information
+- Post statistics (views, likes, retweets, etc.)
+- Links to images and videos
+- Quoted tweet content (if present)
+
 ### Command Line Usage
 
 ```bash
-# Using tweet ID
-python -m xtract --id 1895573480835539451
+# Basic usage with tweet ID
+python -m xtract 1895573480835539451
 
 # Using URL
-python -m xtract --url https://x.com/elonmusk/status/1895573480835539451
+python -m xtract https://x.com/elonmusk/status/1895573480835539451
+
+# Save to custom directory
+python -m xtract 1895573480835539451 --output-dir my_downloads
+
+# Generate Markdown summary
+python -m xtract 1895573480835539451 --markdown
+
+# Save raw API response
+python -m xtract 1895573480835539451 --save-raw
+
+# Pretty-print JSON output to console
+python -m xtract 1895573480835539451 --pretty
 ```
 
 ## Project Structure
@@ -109,6 +148,7 @@ python -m xtract --url https://x.com/elonmusk/status/1895573480835539451
     └── utils/              # Utilities
         ├── __init__.py
         ├── file.py         # File handling
+        ├── markdown.py     # Markdown generation
         └── media.py        # Media processing
 ```
 
