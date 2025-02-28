@@ -8,4 +8,4 @@ from xtract.models.user import UserDetails
 
 __version__ = "0.1.0"
 
-__all__ = ["download_x_post", "Post", "PostData", "UserDetails"] 
+__all__ = ["download_x_post", "Post", "PostData", "UserDetails"]

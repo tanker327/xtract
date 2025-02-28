@@ -11,12 +11,12 @@ from urllib.parse import urlparse
 
 from xtract.api.errors import APIError
 from xtract.config.constants import (
-    DEFAULT_HEADERS, 
-    GUEST_TOKEN_URL, 
-    TWEET_DATA_URL, 
+    DEFAULT_HEADERS,
+    GUEST_TOKEN_URL,
+    TWEET_DATA_URL,
     DEFAULT_FEATURES,
     DEFAULT_FIELD_TOGGLES,
-    DEFAULT_OUTPUT_DIR
+    DEFAULT_OUTPUT_DIR,
 )
 from xtract.models.post import Post
 from xtract.utils.file import save_json, ensure_directory
@@ -25,10 +25,10 @@ from xtract.utils.file import save_json, ensure_directory
 def get_guest_token() -> Optional[str]:
     """
     Fetch a guest token from X's API.
-    
+
     Returns:
         str: Guest token if successful, None otherwise
-        
+
     Raises:
         APIError: If the API request fails
     """
@@ -44,26 +44,28 @@ def get_guest_token() -> Optional[str]:
 def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
     """
     Fetch tweet data using the GraphQL endpoint.
-    
+
     Args:
         tweet_id: ID of the tweet to fetch
         headers: Headers for the API request
-        
+
     Returns:
         Dict[str, Any]: Tweet data from the API
-        
+
     Raises:
         APIError: If the API request fails
     """
     params = {
-        "variables": json.dumps({
-            "tweetId": tweet_id,
-            "withCommunity": False,
-            "includePromotedContent": False,
-            "withVoice": False
-        }),
+        "variables": json.dumps(
+            {
+                "tweetId": tweet_id,
+                "withCommunity": False,
+                "includePromotedContent": False,
+                "withVoice": False,
+            }
+        ),
         "features": json.dumps(DEFAULT_FEATURES),
-        "fieldToggles": json.dumps(DEFAULT_FIELD_TOGGLES)
+        "fieldToggles": json.dumps(DEFAULT_FIELD_TOGGLES),
     }
     try:
         response = requests.get(TWEET_DATA_URL, headers=headers, params=params)
@@ -73,17 +75,21 @@ def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
         raise APIError(f"Failed to fetch tweet {tweet_id}: {e}")
 
 
-def download_x_post(tweet_id: str, output_dir: str = DEFAULT_OUTPUT_DIR,
-                   cookies: Optional[str] = None, save_raw_response: bool = False) -> Optional[Post]:
+def download_x_post(
+    tweet_id: str,
+    output_dir: str = DEFAULT_OUTPUT_DIR,
+    cookies: Optional[str] = None,
+    save_raw_response: bool = False,
+) -> Optional[Post]:
     """
     Download X post content and return a Post object.
-    
+
     Args:
         tweet_id: ID of the tweet to download
         output_dir: Directory to save the downloaded data
         cookies: Cookies for authentication (optional)
         save_raw_response: Whether to save the raw API response
-        
+
     Returns:
         Optional[Post]: Post object if successful, None otherwise
     """
@@ -124,4 +130,4 @@ def download_x_post(tweet_id: str, output_dir: str = DEFAULT_OUTPUT_DIR,
     json_file = os.path.join(post_dir, "tweet.json")
     save_json(post.to_dict(), json_file)
     print(f"Structured JSON saved to: {json_file}")
-    return post 
+    return post

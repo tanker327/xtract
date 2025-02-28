@@ -26,7 +26,7 @@ def sample_user_data():
         "media_count": 100,
         "listed_count": 50,
         "verified": True,
-        "is_blue_verified": True
+        "is_blue_verified": True,
     }
 
 
@@ -54,14 +54,14 @@ def sample_tweet_data():
                             "media": [
                                 {
                                     "type": "photo",
-                                    "media_url_https": "https://example.com/image1.jpg"
+                                    "media_url_https": "https://example.com/image1.jpg",
                                 },
                                 {
                                     "type": "photo",
-                                    "media_url_https": "https://example.com/image2.jpg"
-                                }
+                                    "media_url_https": "https://example.com/image2.jpg",
+                                },
                             ]
-                        }
+                        },
                     },
                     "core": {
                         "user_results": {
@@ -73,16 +73,12 @@ def sample_tweet_data():
                                     "followers_count": 5000,
                                     "friends_count": 1000,
                                     "statuses_count": 1200,
-                                    "verified": True
+                                    "verified": True,
                                 }
                             }
                         }
                     },
-                    "note_tweet": {
-                        "note_tweet_results": {
-                            "result": {}
-                        }
-                    }
+                    "note_tweet": {"note_tweet_results": {"result": {}}},
                 }
             }
         }
@@ -106,7 +102,7 @@ def sample_user_details():
         media_count=100,
         listed_count=50,
         is_verified=True,
-        is_blue_verified=True
+        is_blue_verified=True,
     )
 
 
@@ -125,7 +121,7 @@ def sample_post_data():
         possibly_sensitive=False,
         conversation_id="123456789",
         is_translatable=True,
-        grok_analysis_button=False
+        grok_analysis_button=False,
     )
 
 
@@ -141,7 +137,7 @@ def sample_post(sample_user_details, sample_post_data):
         images=["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
         videos=[],
         user_details=sample_user_details,
-        post_data=sample_post_data
+        post_data=sample_post_data,
     )
 
 
@@ -151,4 +147,4 @@ def mock_response():
     mock = MagicMock()
     mock.raise_for_status = MagicMock()
     mock.json = MagicMock(return_value={"guest_token": "mock_token"})
-    return mock 
+    return mock

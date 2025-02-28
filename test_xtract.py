@@ -5,14 +5,15 @@ Test script to verify the xtract package works correctly.
 
 from xtract import download_x_post
 
+
 def main():
     """Test the xtract package."""
     # Replace with a valid tweet ID
     tweet_id = "1892413385804792307"
-    
+
     print(f"Testing xtract package with tweet ID: {tweet_id}")
     post = download_x_post(tweet_id)
-    
+
     if post:
         print("\nTest successful! Post details:")
         print(f"Username: {post.username}")
@@ -24,7 +25,7 @@ def main():
         print(f"User followers: {post.user_details.followers_count}")
         print(f"Likes: {post.post_data.favorite_count}")
         print(f"Retweets: {post.post_data.retweet_count}")
-        
+
         if post.quoted_tweet:
             print("\nQuoted tweet found!")
             print(f"Quoted username: {post.quoted_tweet.username}")
@@ -36,5 +37,6 @@ def main():
     else:
         print("Test failed: Could not download post.")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

@@ -32,11 +32,11 @@ def test_post_data_from_dict():
         "is_quote_status": True,
         "lang": "en",
         "possibly_sensitive": True,
-        "conversation_id_str": "123456789"
+        "conversation_id_str": "123456789",
     }
-    
+
     post_data = PostData.from_dict(tweet, legacy)
-    
+
     assert post_data.favorite_count == 100
     assert post_data.retweet_count == 50
     assert post_data.reply_count == 25
@@ -53,17 +53,10 @@ def test_post_data_from_dict():
 
 def test_post_initialization():
     """Test Post initialization."""
-    user_details = UserDetails(
-        name="Test User",
-        screen_name="testuser",
-        followers_count=1000
-    )
-    
-    post_data = PostData(
-        favorite_count=50,
-        retweet_count=20
-    )
-    
+    user_details = UserDetails(name="Test User", screen_name="testuser", followers_count=1000)
+
+    post_data = PostData(favorite_count=50, retweet_count=20)
+
     post = Post(
         tweet_id="123456789",
         username="testuser",
@@ -73,9 +66,9 @@ def test_post_initialization():
         images=["https://example.com/image.jpg"],
         videos=[],
         user_details=user_details,
-        post_data=post_data
+        post_data=post_data,
     )
-    
+
     assert post.tweet_id == "123456789"
     assert post.username == "testuser"
     assert post.created_at == "Wed Feb 28 12:00:00 +0000 2024"
@@ -92,17 +85,10 @@ def test_post_initialization():
 
 def test_post_to_dict():
     """Test Post to_dict serialization."""
-    user_details = UserDetails(
-        name="Test User",
-        screen_name="testuser",
-        followers_count=1000
-    )
-    
-    post_data = PostData(
-        favorite_count=50,
-        retweet_count=20
-    )
-    
+    user_details = UserDetails(name="Test User", screen_name="testuser", followers_count=1000)
+
+    post_data = PostData(favorite_count=50, retweet_count=20)
+
     post = Post(
         tweet_id="123456789",
         username="testuser",
@@ -112,11 +98,11 @@ def test_post_to_dict():
         images=["https://example.com/image.jpg"],
         videos=[],
         user_details=user_details,
-        post_data=post_data
+        post_data=post_data,
     )
-    
+
     post_dict = post.to_dict()
-    
+
     assert post_dict["tweet_id"] == "123456789"
     assert post_dict["username"] == "testuser"
     assert post_dict["created_at"] == "Wed Feb 28 12:00:00 +0000 2024"
@@ -133,26 +119,14 @@ def test_post_to_dict():
 
 def test_post_with_quoted_tweet():
     """Test Post with quoted tweet."""
-    user_details = UserDetails(
-        name="Test User",
-        screen_name="testuser"
-    )
-    
-    post_data = PostData(
-        favorite_count=50,
-        retweet_count=20
-    )
-    
-    quoted_user = UserDetails(
-        name="Quoted User",
-        screen_name="quoteduser"
-    )
-    
-    quoted_post_data = PostData(
-        favorite_count=100,
-        retweet_count=30
-    )
-    
+    user_details = UserDetails(name="Test User", screen_name="testuser")
+
+    post_data = PostData(favorite_count=50, retweet_count=20)
+
+    quoted_user = UserDetails(name="Quoted User", screen_name="quoteduser")
+
+    quoted_post_data = PostData(favorite_count=100, retweet_count=30)
+
     quoted_post = Post(
         tweet_id="987654321",
         username="quoteduser",
@@ -162,9 +136,9 @@ def test_post_with_quoted_tweet():
         images=[],
         videos=["https://example.com/video.mp4"],
         user_details=quoted_user,
-        post_data=quoted_post_data
+        post_data=quoted_post_data,
     )
-    
+
     post = Post(
         tweet_id="123456789",
         username="testuser",
@@ -175,16 +149,16 @@ def test_post_with_quoted_tweet():
         videos=[],
         user_details=user_details,
         post_data=post_data,
-        quoted_tweet=quoted_post
+        quoted_tweet=quoted_post,
     )
-    
+
     assert post.quoted_tweet is not None
     assert post.quoted_tweet.tweet_id == "987654321"
     assert post.quoted_tweet.username == "quoteduser"
     assert post.quoted_tweet.text == "This is a quoted post"
-    
+
     post_dict = post.to_dict()
     assert "quoted_tweet" in post_dict
     assert post_dict["quoted_tweet"]["tweet_id"] == "987654321"
     assert post_dict["quoted_tweet"]["text"] == "This is a quoted post"
-    assert len(post_dict["quoted_tweet"]["videos"]) == 1 
+    assert len(post_dict["quoted_tweet"]["videos"]) == 1

@@ -5,7 +5,7 @@ import os
 import sys
 
 # Add a path to find the CLI module
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from xtract.cli import main
 
@@ -21,15 +21,15 @@ def mock_post():
     post.view_count = "500"
     post.images = ["https://example.com/image.jpg"]
     post.videos = []
-    
+
     post.user_details.name = "Test User"
     post.user_details.followers_count = 1000
-    
+
     post.post_data.favorite_count = 50
     post.post_data.retweet_count = 20
-    
+
     post.quoted_tweet = None
-    
+
     # Configure to_dict to return a real dictionary
     post.to_dict.return_value = {
         "tweet_id": "123456789",
@@ -39,16 +39,10 @@ def mock_post():
         "view_count": "500",
         "images": ["https://example.com/image.jpg"],
         "videos": [],
-        "user_details": {
-            "name": "Test User",
-            "followers_count": 1000
-        },
-        "post_data": {
-            "favorite_count": 50,
-            "retweet_count": 20
-        }
+        "user_details": {"name": "Test User", "followers_count": 1000},
+        "post_data": {"favorite_count": 50, "retweet_count": 20},
     }
-    
+
     return post
 
 
@@ -62,20 +56,17 @@ def test_cli_basic(mock_args, mock_download, mock_post):
     mock_args.return_value.cookies = None
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
-    
+
     # Setup mock download function
     mock_download.return_value = mock_post
-    
+
     # Run the CLI
     with patch("sys.stdout"):  # Suppress output
         main()
-    
+
     # Verify the download function was called with the correct parameters
     mock_download.assert_called_once_with(
-        "123456789", 
-        output_dir=None, 
-        cookies=None, 
-        save_raw_response=False
+        "123456789", output_dir=None, cookies=None, save_raw_response=False
     )
 
 
@@ -90,20 +81,17 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
         mock_args.return_value.cookies = None
         mock_args.return_value.save_raw = False
         mock_args.return_value.pretty = False
-        
+
         # Setup mock download function
         mock_download.return_value = mock_post
-        
+
         # Run the CLI
         with patch("sys.stdout"):  # Suppress output
             main()
-        
+
         # Verify the download function was called with the correct output dir
         mock_download.assert_called_once_with(
-            "123456789", 
-            output_dir=temp_dir, 
-            cookies=None, 
-            save_raw_response=False
+            "123456789", output_dir=temp_dir, cookies=None, save_raw_response=False
         )
 
 
@@ -117,20 +105,17 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
     mock_args.return_value.cookies = "auth_token=abc; ct0=123"
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
-    
+
     # Setup mock download function
     mock_download.return_value = mock_post
-    
+
     # Run the CLI
     with patch("sys.stdout"):  # Suppress output
         main()
-    
+
     # Verify the download function was called with the cookies
     mock_download.assert_called_once_with(
-        "123456789", 
-        output_dir=None, 
-        cookies="auth_token=abc; ct0=123", 
-        save_raw_response=False
+        "123456789", output_dir=None, cookies="auth_token=abc; ct0=123", save_raw_response=False
     )
 
 
@@ -144,20 +129,17 @@ def test_cli_save_raw_response(mock_args, mock_download, mock_post):
     mock_args.return_value.cookies = None
     mock_args.return_value.save_raw = True
     mock_args.return_value.pretty = False
-    
+
     # Setup mock download function
     mock_download.return_value = mock_post
-    
+
     # Run the CLI
     with patch("sys.stdout"):  # Suppress output
         main()
-    
+
     # Verify the download function was called with save_raw_response=True
     mock_download.assert_called_once_with(
-        "123456789", 
-        output_dir=None, 
-        cookies=None, 
-        save_raw_response=True
+        "123456789", output_dir=None, cookies=None, save_raw_response=True
     )
 
 
@@ -171,12 +153,12 @@ def test_cli_download_failure(mock_args, mock_download):
     mock_args.return_value.cookies = None
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
-    
+
     # Setup mock download function to return None (failure)
     mock_download.return_value = None
-    
+
     # Run the CLI and check for non-zero exit code
     with patch("sys.stdout"):  # Suppress output
         with patch("sys.exit") as mock_exit:
             main()
-            mock_exit.assert_called_once_with(1) 
+            mock_exit.assert_called_once_with(1)

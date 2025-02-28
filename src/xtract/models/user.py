@@ -9,6 +9,7 @@ from typing import Dict, Any
 @dataclass
 class UserDetails:
     """Class to represent user information from X."""
+
     name: str = ""
     screen_name: str = ""
     description: str = ""
@@ -25,13 +26,13 @@ class UserDetails:
     is_blue_verified: bool = False
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'UserDetails':
+    def from_dict(cls, data: Dict[str, Any]) -> "UserDetails":
         """
         Create a UserDetails instance from a dictionary.
-        
+
         Args:
             data: Dictionary containing user data from the API
-            
+
         Returns:
             UserDetails: Populated instance
         """
@@ -49,5 +50,5 @@ class UserDetails:
             media_count=data.get("media_count", 0),
             listed_count=data.get("listed_count", 0),
             is_verified=data.get("verified", False),
-            is_blue_verified=data.get("is_blue_verified", False)
-        ) 
+            is_blue_verified=data.get("is_blue_verified", False),
+        )

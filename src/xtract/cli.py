@@ -11,15 +11,18 @@ from xtract.api.client import download_x_post
 
 def main():
     """Main entry point for the CLI."""
-    parser = argparse.ArgumentParser(description='Download content from X posts')
-    parser.add_argument('tweet_id', help='X post ID (e.g., 1892413385804792307)')
-    parser.add_argument('--output-dir', default='x_post_downloads',
-                        help='Directory to save downloaded content')
-    parser.add_argument('--cookies', help='Cookies for authentication (optional)')
-    parser.add_argument('--save-raw', action='store_true', default=True,
-                        help='Save raw API response')
-    parser.add_argument('--pretty', action='store_true', default=False,
-                        help='Pretty-print JSON output to console')
+    parser = argparse.ArgumentParser(description="Download content from X posts")
+    parser.add_argument("tweet_id", help="X post ID (e.g., 1892413385804792307)")
+    parser.add_argument(
+        "--output-dir", default="x_post_downloads", help="Directory to save downloaded content"
+    )
+    parser.add_argument("--cookies", help="Cookies for authentication (optional)")
+    parser.add_argument(
+        "--save-raw", action="store_true", default=True, help="Save raw API response"
+    )
+    parser.add_argument(
+        "--pretty", action="store_true", default=False, help="Pretty-print JSON output to console"
+    )
 
     args = parser.parse_args()
 
@@ -32,7 +35,7 @@ def main():
         args.tweet_id,
         output_dir=args.output_dir,
         cookies=args.cookies,
-        save_raw_response=args.save_raw
+        save_raw_response=args.save_raw,
     )
 
     if post:
@@ -47,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

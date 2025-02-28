@@ -49,4 +49,4 @@ setup(
             "xtract=xtract.cli:main",
         ],
     },
-) 
+)

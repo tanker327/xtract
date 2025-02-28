@@ -37,9 +37,9 @@ def test_user_details_custom_initialization():
         media_count=100,
         listed_count=50,
         is_verified=True,
-        is_blue_verified=True
+        is_blue_verified=True,
     )
-    
+
     assert user.name == "Test User"
     assert user.screen_name == "testuser"
     assert user.description == "This is a test user"
@@ -72,11 +72,11 @@ def test_user_details_from_dict():
         "media_count": 100,
         "listed_count": 50,
         "verified": True,
-        "is_blue_verified": True
+        "is_blue_verified": True,
     }
-    
+
     user = UserDetails.from_dict(user_data)
-    
+
     assert user.name == "Test User"
     assert user.screen_name == "testuser"
     assert user.description == "This is a test user"
@@ -95,13 +95,10 @@ def test_user_details_from_dict():
 
 def test_user_details_from_dict_missing_values():
     """Test UserDetails creation from dictionary with missing values."""
-    user_data = {
-        "name": "Test User",
-        "screen_name": "testuser"
-    }
-    
+    user_data = {"name": "Test User", "screen_name": "testuser"}
+
     user = UserDetails.from_dict(user_data)
-    
+
     assert user.name == "Test User"
     assert user.screen_name == "testuser"
     assert user.description == ""
@@ -115,4 +112,4 @@ def test_user_details_from_dict_missing_values():
     assert user.media_count == 0
     assert user.listed_count == 0
     assert user.is_verified is False
-    assert user.is_blue_verified is False 
+    assert user.is_blue_verified is False

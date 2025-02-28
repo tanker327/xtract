@@ -21,7 +21,7 @@ DEFAULT_HEADERS = {
     "sec-fetch-site": "same-site",
     "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
     "x-twitter-active-user": "yes",
-    "x-twitter-client-language": "en"
+    "x-twitter-client-language": "en",
 }
 
 # API endpoints
@@ -60,7 +60,7 @@ DEFAULT_FEATURES = {
     "responsive_web_grok_image_annotation_enabled": False,
     "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
     "responsive_web_graphql_timeline_navigation_enabled": True,
-    "responsive_web_enhance_cards_enabled": False
+    "responsive_web_enhance_cards_enabled": False,
 }
 
 # Default field toggles for tweet request
@@ -68,8 +68,8 @@ DEFAULT_FIELD_TOGGLES = {
     "withArticleRichContentState": True,
     "withArticlePlainText": False,
     "withGrokAnalyze": False,
-    "withDisallowedReplyControls": False
+    "withDisallowedReplyControls": False,
 }
 
 # Default output directory
-DEFAULT_OUTPUT_DIR = "x_post_downloads" 
+DEFAULT_OUTPUT_DIR = "x_post_downloads"
