@@ -76,26 +76,38 @@ def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
 
 
 def download_x_post(
-    tweet_id: str,
-    output_dir: str = DEFAULT_OUTPUT_DIR,
-    cookies: Optional[str] = None,
+    post_identifier: str,
+    output_dir: str = None,
+    cookies: str = None,
     save_raw_response: bool = False,
 ) -> Optional[Post]:
     """
-    Download X post content and return a Post object.
+    Download an X (Twitter) post by its ID or URL.
 
     Args:
-        tweet_id: ID of the tweet to download
-        output_dir: Directory to save the downloaded data
-        cookies: Cookies for authentication (optional)
-        save_raw_response: Whether to save the raw API response
+        post_identifier: Either a tweet ID or a URL containing the tweet ID
+                        (e.g. "1234567890" or "https://x.com/username/status/1234567890")
+        output_dir: Directory to save the tweet data (default: current directory)
+        cookies: Cookies to use for authentication (optional)
+        save_raw_response: Whether to save the raw API response (default: False)
 
     Returns:
-        Optional[Post]: Post object if successful, None otherwise
+        Post object if successful, None otherwise
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    post_dir = os.path.join(output_dir, f"tweet_{tweet_id}_{timestamp}")
-    ensure_directory(post_dir)
+    # Extract tweet ID from URL if a URL is provided
+    tweet_id = post_identifier
+    if "/" in post_identifier and "status" in post_identifier:
+        # Extract ID from URL like "https://x.com/username/status/1234567890"
+        tweet_id = post_identifier.split("status/")[1].split("/")[0].split("?")[0]
+        # Remove any non-numeric characters (in case of trailing text)
+        tweet_id = "".join(c for c in tweet_id if c.isdigit())
+
+    # Ensure output directory exists
+    if output_dir is None:
+        output_dir = os.getcwd()
+
+    tweet_dir = os.path.join(output_dir, f"x_post_{tweet_id}")
+    ensure_directory(tweet_dir)
 
     headers = DEFAULT_HEADERS.copy()
     if not cookies:
@@ -117,7 +129,7 @@ def download_x_post(
         return None
 
     if save_raw_response:
-        raw_file = os.path.join(post_dir, "raw_response.json")
+        raw_file = os.path.join(tweet_dir, "raw_response.json")
         save_json(data, raw_file)
         print(f"Raw response saved to: {raw_file}")
 
@@ -127,7 +139,7 @@ def download_x_post(
     note_tweet = tweet.get("note_tweet", {}).get("note_tweet_results", {}).get("result", {})
 
     post = Post.from_api_data(tweet, legacy, user, note_tweet)
-    json_file = os.path.join(post_dir, "tweet.json")
+    json_file = os.path.join(tweet_dir, "tweet.json")
     save_json(post.to_dict(), json_file)
     print(f"Structured JSON saved to: {json_file}")
     return post

@@ -9,7 +9,8 @@ from xtract import download_x_post
 def main():
     """Test the xtract package."""
     # Replace with a valid tweet ID
-    tweet_id = "1892413385804792307"
+    # tweet_id = "1892413385804792307"
+    tweet_id = "https://x.com/elonmusk/status/1895573480835539451"
 
     print(f"Testing xtract package with tweet ID: {tweet_id}")
     post = download_x_post(tweet_id)

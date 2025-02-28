@@ -53,31 +53,34 @@ pip install -e ".[dev]"
 
 ## Usage
 
-### As a Library
+### Downloading a post
+
+You can download a post by providing either the tweet ID or the full URL:
 
 ```python
 from xtract import download_x_post
 
-# Download a post by ID
-post = download_x_post("1892413385804792307")
+# Using tweet ID
+post = download_x_post("1895573480835539451")
 
-# Access post data
-print(post.text)
-print(post.images)
-print(post.user_details.name)
-
-# Convert to dictionary
-post_dict = post.to_dict()
+# Using URL
+post = download_x_post("https://x.com/elonmusk/status/1895573480835539451")
 ```
 
-### Command Line
+Both methods will retrieve the same post. The URL format supports various variations:
+- `https://x.com/username/status/ID`
+- `https://twitter.com/username/status/ID`
+- URLs with query parameters
+- URLs with additional path segments
+
+### Command Line Usage
 
 ```bash
-# Basic usage
-xtract 1892413385804792307
+# Using tweet ID
+python -m xtract --id 1895573480835539451
 
-# With options
-xtract 1892413385804792307 --output-dir downloads --pretty
+# Using URL
+python -m xtract --url https://x.com/elonmusk/status/1895573480835539451
 ```
 
 ## Project Structure

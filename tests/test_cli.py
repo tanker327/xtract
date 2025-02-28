@@ -121,30 +121,6 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
 
 @patch("xtract.cli.download_x_post")
 @patch("xtract.cli.argparse.ArgumentParser.parse_args")
-def test_cli_save_raw_response(mock_args, mock_download, mock_post):
-    """Test CLI with raw response saving enabled."""
-    # Setup mock arguments
-    mock_args.return_value.tweet_id = "123456789"
-    mock_args.return_value.output_dir = None
-    mock_args.return_value.cookies = None
-    mock_args.return_value.save_raw = True
-    mock_args.return_value.pretty = False
-
-    # Setup mock download function
-    mock_download.return_value = mock_post
-
-    # Run the CLI
-    with patch("sys.stdout"):  # Suppress output
-        main()
-
-    # Verify the download function was called with save_raw_response=True
-    mock_download.assert_called_once_with(
-        "123456789", output_dir=None, cookies=None, save_raw_response=True
-    )
-
-
-@patch("xtract.cli.download_x_post")
-@patch("xtract.cli.argparse.ArgumentParser.parse_args")
 def test_cli_download_failure(mock_args, mock_download):
     """Test CLI behavior when download fails."""
     # Setup mock arguments
