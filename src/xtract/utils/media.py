@@ -20,7 +20,7 @@ def extract_media_urls(media: List[Dict[str, Any]]) -> Tuple[List[str], List[str
         if item.get("type") == "photo":
             if url := item.get("media_url_https"):
                 images.append(url)
-        elif item.get("type") == "video":
+        elif item.get("type") in ["video", "animated_gif"]:
             variants = item.get("video_info", {}).get("variants", [])
             if best_variant := max(variants, key=lambda x: x.get("bitrate", 0), default={}):
                 if url := best_variant.get("url"):
