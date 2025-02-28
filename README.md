@@ -65,7 +65,7 @@ from xtract import download_x_post
 post = download_x_post("1895573480835539451")
 
 # Using URL
-post = download_x_post("https://x.com/elonmusk/status/1895573480835539451")
+post = download_x_post("https://x.com/xuser/status/1895573480835539451")
 ```
 
 Both methods will retrieve the same post. The URL format supports various variations:
@@ -111,8 +111,8 @@ Example output format:
 ```markdown
 ---
 tweet_id: 1895573480835539451
-author: elonmusk
-display_name: Elon Musk
+author: xuser
+display_name: X User
 date: 2024-03-28 12:34:56
 is_verified: True
 image_count: 1
@@ -123,11 +123,11 @@ retweets: 1234
 replies: 123
 quotes: 12
 has_quoted_tweet: false
-url: https://x.com/elonmusk/status/1895573480835539451
+url: https://x.com/xuser/status/1895573480835539451
 ---
 
-# Post by @elonmusk ✓
-**Elon Musk** (@elonmusk) • 2024-03-28 12:34:56
+# Post by @xuser ✓
+**X User** (@xuser) • 2024-03-28 12:34:56
 
 This is the post text content...
 ```
@@ -139,7 +139,7 @@ This is the post text content...
 python -m xtract 1895573480835539451
 
 # Using URL
-python -m xtract https://x.com/elonmusk/status/1895573480835539451
+python -m xtract https://x.com/xuser/status/1895573480835539451
 
 # Save to custom directory
 python -m xtract 1895573480835539451 --output-dir my_downloads
