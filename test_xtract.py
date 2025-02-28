@@ -4,6 +4,7 @@ Test script to verify the xtract package works correctly.
 """
 
 from xtract import download_x_post
+from xtract.utils.markdown import post_to_markdown
 
 
 def main():
@@ -35,6 +36,9 @@ def main():
             print(f"Quoted view count: {post.quoted_tweet.view_count}")
             print(f"Quoted images: {len(post.quoted_tweet.images)}")
             print(f"Quoted videos: {len(post.quoted_tweet.videos)}")
+            
+        print("\n\n")    
+        print(post_to_markdown(post))
     else:
         print("Test failed: Could not download post.")
 

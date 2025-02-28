@@ -9,13 +9,14 @@ from datetime import datetime
 from xtract.models.post import Post
 
 
-def post_to_markdown(post: Post, include_stats: bool = True) -> str:
+def post_to_markdown(post: Post, include_stats: bool = True, include_metadata: bool = True) -> str:
     """
     Convert a Post object to a Markdown string.
 
     Args:
         post: The Post object to convert
         include_stats: Whether to include post statistics (default: True)
+        include_metadata: Whether to include YAML frontmatter metadata (default: True)
 
     Returns:
         str: Markdown representation of the post
@@ -28,10 +29,47 @@ def post_to_markdown(post: Post, include_stats: bool = True) -> str:
     except (ValueError, TypeError):
         formatted_date = post.created_at
 
+    md = []
+    
+    # Add YAML frontmatter metadata section
+    if include_metadata:
+        md.append("---")
+        md.append(f"tweet_id: {post.tweet_id}")
+        md.append(f"author: {post.username}")
+        md.append(f"display_name: {post.user_details.name}")
+        md.append(f"date: {formatted_date}")
+        md.append(f"is_verified: {post.user_details.is_verified}")
+        
+        # Add media counts
+        md.append(f"image_count: {len(post.images)}")
+        md.append(f"video_count: {len(post.videos)}")
+        
+        # Add stats summary
+        md.append(f"views: {post.view_count}")
+        md.append(f"likes: {post.post_data.favorite_count}")
+        md.append(f"retweets: {post.post_data.retweet_count}")
+        md.append(f"replies: {post.post_data.reply_count}")
+        md.append(f"quotes: {post.post_data.quote_count}")
+        
+        # Add info about quoted tweet if present
+        if post.quoted_tweet:
+            md.append(f"has_quoted_tweet: true")
+            md.append(f"quoted_tweet_id: {post.quoted_tweet.tweet_id}")
+            md.append(f"quoted_tweet_author: {post.quoted_tweet.username}")
+        else:
+            md.append(f"has_quoted_tweet: false")
+        
+        # Add X post URL
+        md.append(f"url: https://x.com/{post.username}/status/{post.tweet_id}")
+        
+        md.append(f"downloaded_at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}") 
+        md.append(f"downloaded_by: xtract")
+        md.append("---")
+        md.append("")  # Empty line after frontmatter
+    
     # Start with the post header - user info and timestamp
     verification_badge = "✓" if post.user_details.is_verified else ""
     
-    md = []
     md.append(f"# Post by @{post.username} {verification_badge}")
     md.append(f"**{post.user_details.name}** (@{post.username}) • {formatted_date}")
     md.append("")
@@ -59,7 +97,8 @@ def post_to_markdown(post: Post, include_stats: bool = True) -> str:
         md.append("## Quoted Tweet")
         md.append("---")
         # Recursively format the quoted tweet but without stats to keep it cleaner
-        quoted_md = post_to_markdown(post.quoted_tweet, include_stats=False)
+        # Also skip metadata for quoted tweets
+        quoted_md = post_to_markdown(post.quoted_tweet, include_stats=False, include_metadata=False)
         # Indent the quoted tweet content to make it visually distinct
         quoted_md_indented = "\n".join([f"> {line}" for line in quoted_md.split("\n")])
         md.append(quoted_md_indented)

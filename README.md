@@ -88,17 +88,49 @@ post = download_x_post("1895573480835539451")
 markdown_content = post_to_markdown(post)
 print(markdown_content)
 
+# Skip metadata section if desired
+markdown_without_metadata = post_to_markdown(post, include_metadata=False)
+
+# Control stats and metadata separately
+markdown_custom = post_to_markdown(post, include_stats=True, include_metadata=True)
+
 # Save as Markdown file
 markdown_path = save_post_as_markdown(post, output_dir="output")
 print(f"Markdown saved to: {markdown_path}")
 ```
 
 The Markdown output includes:
+- YAML frontmatter with metadata (tweet ID, author, statistics, etc.)
 - Post text and creation date
 - Author information
 - Post statistics (views, likes, retweets, etc.)
 - Links to images and videos
-- Quoted tweet content (if present)
+- Quoted tweet content (if present, without metadata)
+
+Example output format:
+```markdown
+---
+tweet_id: 1895573480835539451
+author: elonmusk
+display_name: Elon Musk
+date: 2024-03-28 12:34:56
+is_verified: True
+image_count: 1
+video_count: 0
+views: 1234567
+likes: 12345
+retweets: 1234
+replies: 123
+quotes: 12
+has_quoted_tweet: false
+url: https://x.com/elonmusk/status/1895573480835539451
+---
+
+# Post by @elonmusk ✓
+**Elon Musk** (@elonmusk) • 2024-03-28 12:34:56
+
+This is the post text content...
+```
 
 ### Command Line Usage
 
