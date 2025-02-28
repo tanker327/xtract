@@ -150,7 +150,9 @@ def test_download_with_custom_cookies(mock_fetch, sample_tweet_data):
         custom_cookies = "auth_token=123456; ct0=abcdef"
 
         # Download with cookies
-        post = download_x_post("123456789", output_dir=temp_dir, cookies=custom_cookies, save_raw_response_to_file=True)
+        post = download_x_post(
+            "123456789", output_dir=temp_dir, cookies=custom_cookies, save_raw_response_to_file=True
+        )
 
         # Verify the cookies were used
         headers = mock_fetch.call_args[0][1]

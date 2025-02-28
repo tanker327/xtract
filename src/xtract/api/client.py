@@ -137,16 +137,16 @@ def download_x_post(
     note_tweet = tweet.get("note_tweet", {}).get("note_tweet_results", {}).get("result", {})
 
     post = Post.from_api_data(tweet, legacy, user, note_tweet)
-    
+
     if save_raw_response_to_file and tweet_dir:
         # Save raw response
         raw_file = os.path.join(tweet_dir, "raw_response.json")
         save_json(data, raw_file)
         print(f"Raw response saved to: {raw_file}")
-        
+
         # Save structured tweet data
         json_file = os.path.join(tweet_dir, "tweet.json")
         save_json(post.to_dict(), json_file)
         print(f"Structured JSON saved to: {json_file}")
-    
+
     return post

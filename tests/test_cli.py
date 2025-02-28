@@ -115,7 +115,10 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the cookies
     mock_download.assert_called_once_with(
-        "123456789", output_dir=None, cookies="auth_token=abc; ct0=123", save_raw_response_to_file=False
+        "123456789",
+        output_dir=None,
+        cookies="auth_token=abc; ct0=123",
+        save_raw_response_to_file=False,
     )
 
 
