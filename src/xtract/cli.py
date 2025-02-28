@@ -35,7 +35,7 @@ def main():
         args.tweet_id,
         output_dir=args.output_dir,
         cookies=args.cookies,
-        save_raw_response=args.save_raw,
+        save_raw_response_to_file=args.save_raw,
     )
 
     if post:

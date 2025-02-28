@@ -98,7 +98,7 @@ def test_download_x_post_success(mock_fetch, mock_token, mock_save, mock_dir):
     }
 
     # Call the function
-    post = download_x_post("123456789")
+    post = download_x_post("123456789", save_raw_response_to_file=True)
 
     # Assertions
     assert isinstance(post, Post)
@@ -110,7 +110,7 @@ def test_download_x_post_success(mock_fetch, mock_token, mock_save, mock_dir):
     # Verify mocks were called correctly
     mock_token.assert_called_once()
     mock_fetch.assert_called_once()
-    assert mock_save.call_count == 1
+    assert mock_save.call_count == 2
     mock_dir.assert_called_once()
 
 
@@ -174,7 +174,7 @@ def test_download_x_post_with_cookies(mock_fetch, mock_token, mock_save, mock_di
     }
 
     # Call the function with cookies
-    post = download_x_post("123456789", cookies="mock_cookies")
+    post = download_x_post("123456789", cookies="mock_cookies", save_raw_response_to_file=True)
 
     # Assertions
     assert isinstance(post, Post)

@@ -66,7 +66,7 @@ def test_cli_basic(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the correct parameters
     mock_download.assert_called_once_with(
-        "123456789", output_dir=None, cookies=None, save_raw_response=False
+        "123456789", output_dir=None, cookies=None, save_raw_response_to_file=False
     )
 
 
@@ -91,7 +91,7 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
 
         # Verify the download function was called with the correct output dir
         mock_download.assert_called_once_with(
-            "123456789", output_dir=temp_dir, cookies=None, save_raw_response=False
+            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
         )
 
 
@@ -115,7 +115,7 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the cookies
     mock_download.assert_called_once_with(
-        "123456789", output_dir=None, cookies="auth_token=abc; ct0=123", save_raw_response=False
+        "123456789", output_dir=None, cookies="auth_token=abc; ct0=123", save_raw_response_to_file=False
     )
 
 
@@ -138,3 +138,27 @@ def test_cli_download_failure(mock_args, mock_download):
         with patch("sys.exit") as mock_exit:
             main()
             mock_exit.assert_called_once_with(1)
+
+
+@patch("xtract.cli.download_x_post")
+@patch("xtract.cli.argparse.ArgumentParser.parse_args")
+def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
+    """Test CLI with raw response saving enabled."""
+    # Setup mock arguments
+    mock_args.return_value.tweet_id = "123456789"
+    mock_args.return_value.output_dir = None
+    mock_args.return_value.cookies = None
+    mock_args.return_value.save_raw = True
+    mock_args.return_value.pretty = False
+
+    # Setup mock download function
+    mock_download.return_value = mock_post
+
+    # Run the CLI
+    with patch("sys.stdout"):  # Suppress output
+        main()
+
+    # Verify the download function was called with save_raw_response_to_file=True
+    mock_download.assert_called_once_with(
+        "123456789", output_dir=None, cookies=None, save_raw_response_to_file=True
+    )

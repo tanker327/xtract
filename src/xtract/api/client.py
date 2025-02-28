@@ -79,7 +79,7 @@ def download_x_post(
     post_identifier: str,
     output_dir: str = None,
     cookies: str = None,
-    save_raw_response: bool = False,
+    save_raw_response_to_file: bool = False,
 ) -> Optional[Post]:
     """
     Download an X (Twitter) post by its ID or URL.
@@ -89,7 +89,7 @@ def download_x_post(
                         (e.g. "1234567890" or "https://x.com/username/status/1234567890")
         output_dir: Directory to save the tweet data (default: current directory)
         cookies: Cookies to use for authentication (optional)
-        save_raw_response: Whether to save the raw API response (default: False)
+        save_raw_response_to_file: Whether to save the data to files (default: False)
 
     Returns:
         Post object if successful, None otherwise
@@ -102,12 +102,15 @@ def download_x_post(
         # Remove any non-numeric characters (in case of trailing text)
         tweet_id = "".join(c for c in tweet_id if c.isdigit())
 
-    # Ensure output directory exists
-    if output_dir is None:
-        output_dir = os.getcwd()
+    # Only setup directory if we're saving files
+    tweet_dir = None
+    if save_raw_response_to_file:
+        # Ensure output directory exists
+        if output_dir is None:
+            output_dir = os.getcwd()
 
-    tweet_dir = os.path.join(output_dir, f"x_post_{tweet_id}")
-    ensure_directory(tweet_dir)
+        tweet_dir = os.path.join(output_dir, f"x_post_{tweet_id}")
+        ensure_directory(tweet_dir)
 
     headers = DEFAULT_HEADERS.copy()
     if not cookies:
@@ -128,18 +131,22 @@ def download_x_post(
         print(e)
         return None
 
-    if save_raw_response:
-        raw_file = os.path.join(tweet_dir, "raw_response.json")
-        save_json(data, raw_file)
-        print(f"Raw response saved to: {raw_file}")
-
     tweet = data.get("data", {}).get("tweetResult", {}).get("result", {})
     legacy = tweet.get("legacy", {})
     user = tweet.get("core", {}).get("user_results", {}).get("result", {}).get("legacy", {})
     note_tweet = tweet.get("note_tweet", {}).get("note_tweet_results", {}).get("result", {})
 
     post = Post.from_api_data(tweet, legacy, user, note_tweet)
-    json_file = os.path.join(tweet_dir, "tweet.json")
-    save_json(post.to_dict(), json_file)
-    print(f"Structured JSON saved to: {json_file}")
+    
+    if save_raw_response_to_file and tweet_dir:
+        # Save raw response
+        raw_file = os.path.join(tweet_dir, "raw_response.json")
+        save_json(data, raw_file)
+        print(f"Raw response saved to: {raw_file}")
+        
+        # Save structured tweet data
+        json_file = os.path.join(tweet_dir, "tweet.json")
+        save_json(post.to_dict(), json_file)
+        print(f"Structured JSON saved to: {json_file}")
+    
     return post

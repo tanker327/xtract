@@ -98,7 +98,7 @@ def test_full_tweet_download_flow(mock_fetch, mock_token, sample_tweet_data):
         mock_fetch.return_value = sample_tweet_data
 
         # Download the tweet
-        post = download_x_post("123456789", output_dir=temp_dir)
+        post = download_x_post("123456789", output_dir=temp_dir, save_raw_response_to_file=True)
 
         # Check the main post details
         assert isinstance(post, Post)
@@ -150,7 +150,7 @@ def test_download_with_custom_cookies(mock_fetch, sample_tweet_data):
         custom_cookies = "auth_token=123456; ct0=abcdef"
 
         # Download with cookies
-        post = download_x_post("123456789", output_dir=temp_dir, cookies=custom_cookies)
+        post = download_x_post("123456789", output_dir=temp_dir, cookies=custom_cookies, save_raw_response_to_file=True)
 
         # Verify the cookies were used
         headers = mock_fetch.call_args[0][1]
