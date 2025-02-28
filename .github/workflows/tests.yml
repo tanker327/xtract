@@ -26,7 +26,7 @@ jobs:
         pip install pytest pytest-cov
     - name: Test with pytest
       run: |
-        pytest --cov=xtract --cov-report=xml
+        PYTHONPATH=$PYTHONPATH:$PWD pytest --cov=xtract --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

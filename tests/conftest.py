@@ -2,8 +2,13 @@
 Shared fixtures for pytest.
 """
 
+import os
+import sys
 import pytest
 from unittest.mock import MagicMock
+
+# Fix import path for GitHub Actions
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from xtract.models.post import Post, PostData
 from xtract.models.user import UserDetails
