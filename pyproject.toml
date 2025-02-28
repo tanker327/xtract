@@ -1,17 +1,41 @@
 [project]
 name = "xtract"
 version = "0.1.0"
-description = "Add your description here"
+description = "A library for extracting data from X (formerly Twitter) posts"
 readme = "README.md"
 authors = [
     { name = "Eric", email = "tanker327@gmail.com" }
 ]
-requires-python = ">=3.11"
-dependencies = ["pytest>=7.4.0", "pytest-cov>=4.1.0"]
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "urllib3>=2.0.7",
+    "certifi>=2023.7.22",
+    "charset-normalizer>=3.3.2",
+    "idna>=3.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "mypy>=1.5.1",
+    "flake8>=6.1.0",
+]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
