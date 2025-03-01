@@ -27,9 +27,12 @@ from xtract.utils.file import save_json, ensure_directory
 logger = get_logger(__name__)
 
 
-def get_guest_token() -> Optional[str]:
+def get_guest_token(token_cache_dir: str = "/tmp/xtract/") -> Optional[str]:
     """
-    Fetch a guest token from X's API.
+    Fetch a guest token from X's API or retrieve from cache.
+
+    Args:
+        token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
 
     Returns:
         str: Guest token if successful, None otherwise
@@ -37,13 +40,39 @@ def get_guest_token() -> Optional[str]:
     Raises:
         APIError: If the API request fails
     """
+    # Ensure cache directory exists
+    ensure_directory(token_cache_dir)
+    token_file_path = os.path.join(token_cache_dir, "guest_token.json")
+    
+    # Check if cached token exists
+    if os.path.exists(token_file_path):
+        try:
+            with open(token_file_path, 'r') as f:
+                token_data = json.load(f)
+                token = token_data.get('token')
+                logger.info("Retrieved guest token from cache. Token: %s", token)
+                return token
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"Failed to read cached token: {e}")
+            # Continue to fetch a new token
+    
+    # Fetch new token
     headers = DEFAULT_HEADERS.copy()
     logger.debug("Requesting guest token from X API")
     try:
         response = requests.post(GUEST_TOKEN_URL, headers=headers)
         response.raise_for_status()
         token = response.json().get("guest_token")
-        logger.debug("Successfully obtained guest token")
+        logger.info("Successfully obtained guest token. Token: %s", token)
+        
+        # Save token to cache
+        try:
+            with open(token_file_path, 'w') as f:
+                json.dump({'token': token, 'timestamp': datetime.now().isoformat()}, f)
+            logger.debug(f"Saved guest token to cache: {token_file_path}")
+        except IOError as e:
+            logger.warning(f"Failed to cache token: {e}")
+        
         return token
     except requests.RequestException as e:
         logger.error(f"Failed to fetch guest token: {e}")
@@ -93,6 +122,7 @@ def download_x_post(
     output_dir: str = None,
     cookies: str = None,
     save_raw_response_to_file: bool = False,
+    token_cache_dir: str = "/tmp/xtract/",
 ) -> Optional[Post]:
     """
     Download an X (Twitter) post by its ID or URL.
@@ -103,6 +133,7 @@ def download_x_post(
         output_dir: Directory to save the tweet data (default: current directory)
         cookies: Cookies to use for authentication (optional)
         save_raw_response_to_file: Whether to save the data to files (default: False)
+        token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
 
     Returns:
         Post object if successful, None otherwise
@@ -136,7 +167,7 @@ def download_x_post(
     if not cookies:
         try:
             logger.debug("No cookies provided, attempting to get guest token")
-            headers["x-guest-token"] = get_guest_token()
+            headers["x-guest-token"] = get_guest_token(token_cache_dir)
             print(f"Using guest token: {headers['x-guest-token']}")
             logger.info(f"Using guest token: {headers['x-guest-token']}")
         except APIError as e:

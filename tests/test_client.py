@@ -17,9 +17,13 @@ def mock_response():
     return mock
 
 
+@patch("xtract.api.client.ensure_directory")
+@patch("os.path.exists")
 @patch("requests.post")
-def test_get_guest_token_success(mock_post, mock_response):
+def test_get_guest_token_success(mock_post, mock_exists, mock_ensure_dir, mock_response):
     """Test successful guest token retrieval."""
+    # Make sure the cache file doesn't exist for this test
+    mock_exists.return_value = False
     mock_post.return_value = mock_response
 
     token = get_guest_token()
@@ -28,15 +32,72 @@ def test_get_guest_token_success(mock_post, mock_response):
     mock_post.assert_called_once()
     mock_response.raise_for_status.assert_called_once()
     mock_response.json.assert_called_once()
+    mock_ensure_dir.assert_called_once_with("/tmp/xtract/")
 
 
+@patch("xtract.api.client.ensure_directory")
+@patch("os.path.exists")
 @patch("requests.post")
-def test_get_guest_token_error(mock_post):
+def test_get_guest_token_error(mock_post, mock_exists, mock_ensure_dir):
     """Test error handling in guest token retrieval."""
+    # Make sure the cache file doesn't exist for this test
+    mock_exists.return_value = False
     mock_post.side_effect = requests.RequestException("API error")
 
     with pytest.raises(APIError):
         get_guest_token()
+    
+    mock_ensure_dir.assert_called_once_with("/tmp/xtract/")
+
+
+@patch("xtract.api.client.ensure_directory")
+@patch("builtins.open", new_callable=MagicMock)
+@patch("json.load")
+@patch("os.path.exists")
+def test_get_guest_token_from_cache(mock_exists, mock_json_load, mock_open_func, mock_ensure_dir):
+    """Test retrieving guest token from cache."""
+    # Set up mocks for file operations
+    mock_exists.return_value = True
+    mock_file = MagicMock()
+    mock_open_func.return_value.__enter__.return_value = mock_file
+    mock_json_load.return_value = {"token": "cached_token"}
+    
+    # Call the function
+    token = get_guest_token()
+    
+    # Assertions
+    assert token == "cached_token"
+    # We now expect exactly one call to exists() for the token file check
+    mock_exists.assert_called_once_with(os.path.join("/tmp/xtract/", "guest_token.json"))
+    mock_open_func.assert_called_once()
+    mock_json_load.assert_called_once()
+    mock_ensure_dir.assert_called_once_with("/tmp/xtract/")
+
+
+@patch("xtract.api.client.ensure_directory")
+@patch("json.dump")
+@patch("builtins.open", new_callable=MagicMock)
+@patch("os.path.exists")
+@patch("requests.post")
+def test_get_guest_token_writes_to_cache(mock_post, mock_exists, mock_open_func, mock_json_dump, mock_ensure_dir, mock_response):
+    """Test that a new guest token is written to cache."""
+    # Set up mocks
+    mock_exists.return_value = False
+    mock_post.return_value = mock_response
+    mock_file = MagicMock()
+    mock_open_func.return_value.__enter__.return_value = mock_file
+    
+    # Call the function
+    token = get_guest_token()
+    
+    # Assertions
+    assert token == "mock_token"
+    mock_post.assert_called_once()
+    mock_open_func.assert_called_once()
+    mock_json_dump.assert_called_once()
+    # First arg should be a dict with 'token' key
+    assert mock_json_dump.call_args[0][0]['token'] == 'mock_token'
+    mock_ensure_dir.assert_called_once_with("/tmp/xtract/")
 
 
 @patch("requests.get")
@@ -262,3 +323,23 @@ def test_extract_tweet_id_from_url():
     assert extract_tweet_id(url2) == "123456789"
     assert extract_tweet_id(url3) == "123456789"
     assert extract_tweet_id(url4) == "123456789"
+
+
+@patch("xtract.api.client.ensure_directory")
+@patch("os.path.exists")
+@patch("requests.post")
+def test_get_guest_token_with_custom_cache_dir(mock_post, mock_exists, mock_ensure_dir, mock_response):
+    """Test guest token retrieval with custom cache directory."""
+    # Make sure the cache file doesn't exist
+    mock_exists.return_value = False
+    mock_post.return_value = mock_response
+    
+    # Use a custom cache directory
+    custom_dir = "/custom/cache/dir"
+    token = get_guest_token(token_cache_dir=custom_dir)
+    
+    # Assertions
+    assert token == "mock_token"
+    # Verify that it checked for the file in the custom directory
+    mock_exists.assert_called_once_with(os.path.join(custom_dir, "guest_token.json"))
+    mock_ensure_dir.assert_called_once_with(custom_dir)
