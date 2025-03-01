@@ -27,12 +27,13 @@ from xtract.utils.file import save_json, ensure_directory
 logger = get_logger(__name__)
 
 
-def get_guest_token(token_cache_dir: str = "/tmp/xtract/") -> Optional[str]:
+def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename: str = "guest_token.json") -> Optional[str]:
     """
     Fetch a guest token from X's API or retrieve from cache.
 
     Args:
         token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
+        token_cache_filename: Filename for the token cache (default: "guest_token.json")
 
     Returns:
         str: Guest token if successful, None otherwise
@@ -42,7 +43,7 @@ def get_guest_token(token_cache_dir: str = "/tmp/xtract/") -> Optional[str]:
     """
     # Ensure cache directory exists
     ensure_directory(token_cache_dir)
-    token_file_path = os.path.join(token_cache_dir, "guest_token.json")
+    token_file_path = os.path.join(token_cache_dir, token_cache_filename)
     
     # Check if cached token exists
     if os.path.exists(token_file_path):
@@ -123,6 +124,7 @@ def download_x_post(
     cookies: str = None,
     save_raw_response_to_file: bool = False,
     token_cache_dir: str = "/tmp/xtract/",
+    token_cache_filename: str = "guest_token.json",
 ) -> Optional[Post]:
     """
     Download an X (Twitter) post by its ID or URL.
@@ -134,6 +136,7 @@ def download_x_post(
         cookies: Cookies to use for authentication (optional)
         save_raw_response_to_file: Whether to save the data to files (default: False)
         token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
+        token_cache_filename: Filename for the token cache (default: "guest_token.json")
 
     Returns:
         Post object if successful, None otherwise
@@ -167,7 +170,7 @@ def download_x_post(
     if not cookies:
         try:
             logger.debug("No cookies provided, attempting to get guest token")
-            headers["x-guest-token"] = get_guest_token(token_cache_dir)
+            headers["x-guest-token"] = get_guest_token(token_cache_dir, token_cache_filename)
             print(f"Using guest token: {headers['x-guest-token']}")
             logger.info(f"Using guest token: {headers['x-guest-token']}")
         except APIError as e:
