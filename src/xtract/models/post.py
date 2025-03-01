@@ -3,10 +3,14 @@ Models for post data from X.
 """
 
 from dataclasses import dataclass
+import logging
 from typing import Dict, List, Any, Optional, Tuple
 
+from xtract.config.logging import get_logger
 from xtract.models.user import UserDetails
 
+# Get a logger for this module
+logger = get_logger(__name__)
 
 @dataclass
 class PostData:
@@ -37,6 +41,7 @@ class PostData:
         Returns:
             PostData: Populated instance
         """
+        logger.debug("Creating PostData from API response")
         return cls(
             favorite_count=legacy.get("favorite_count", 0),
             retweet_count=legacy.get("retweet_count", 0),
@@ -90,45 +95,66 @@ class Post:
         """
         from xtract.utils.media import extract_media_urls
 
+        logger.debug(f"Creating Post from API data for tweet ID: {tweet.get('rest_id', 'unknown')}")
+        
+        logger.debug("Extracting media URLs from extended entities")
         images, videos = extract_media_urls(legacy.get("extended_entities", {}).get("media", []))
+        
+        logger.debug("Creating UserDetails from user data")
+        user_details = UserDetails.from_dict(user)
+        
+        logger.debug("Creating PostData from tweet and legacy data")
+        post_data = PostData.from_dict(tweet, legacy)
+        
+        # Check for note tweet (longer form content)
+        text = legacy.get("full_text", "")
+        if note_tweet.get("text"):
+            logger.debug("Using text from note_tweet (longer form content)")
+            text = note_tweet.get("text", "")
+            
         post = cls(
             tweet_id=tweet.get("rest_id", ""),
             username=user.get("screen_name", ""),
             created_at=legacy.get("created_at", ""),
-            text=note_tweet.get("text", legacy.get("full_text", "")),
+            text=text,
             view_count=tweet.get("views", {}).get("count", "0"),
             images=images,
             videos=videos,
-            user_details=UserDetails.from_dict(user),
-            post_data=PostData.from_dict(tweet, legacy),
+            user_details=user_details,
+            post_data=post_data,
         )
 
-        # Handle quoted tweet
-        quoted_status = tweet.get("quoted_status_result", {}).get("result", {})
-        if quoted_status and quoted_status.get("__typename") == "Tweet":
-            quoted_legacy = quoted_status.get("legacy", {})
+        # Handle quoted tweet if present
+        quoted = legacy.get("quoted_status_result", {}).get("result", {})
+        if quoted:
+            logger.debug(f"Found quoted tweet with ID: {quoted.get('rest_id', 'unknown')}")
+            quoted_legacy = quoted.get("legacy", {})
             quoted_user = (
-                quoted_status.get("core", {})
+                quoted.get("core", {})
                 .get("user_results", {})
                 .get("result", {})
                 .get("legacy", {})
             )
-            quoted_note_tweet = (
-                quoted_status.get("note_tweet", {}).get("note_tweet_results", {}).get("result", {})
+            quoted_note = (
+                quoted.get("note_tweet", {})
+                .get("note_tweet_results", {})
+                .get("result", {})
             )
             post.quoted_tweet = cls.from_api_data(
-                quoted_status, quoted_legacy, quoted_user, quoted_note_tweet
+                quoted, quoted_legacy, quoted_user, quoted_note
             )
-
+        
+        logger.debug(f"Successfully created Post object for tweet ID: {post.tweet_id}")
         return post
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Convert Post instance to dictionary for JSON serialization.
+        Convert the Post to a dictionary.
 
         Returns:
-            dict: Dictionary representation of the Post
+            Dict[str, Any]: Dictionary representation of the Post
         """
+        logger.debug(f"Converting Post to dictionary for tweet ID: {self.tweet_id}")
         result = {
             "tweet_id": self.tweet_id,
             "username": self.username,
@@ -137,9 +163,12 @@ class Post:
             "view_count": self.view_count,
             "images": self.images,
             "videos": self.videos,
-            "user_details": vars(self.user_details),
-            "post_data": vars(self.post_data),
+            "user_details": self.user_details.__dict__,
+            "post_data": self.post_data.__dict__,
         }
+
         if self.quoted_tweet:
+            logger.debug("Including quoted tweet in dictionary")
             result["quoted_tweet"] = self.quoted_tweet.to_dict()
+
         return result

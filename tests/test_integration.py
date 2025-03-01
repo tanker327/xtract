@@ -40,6 +40,31 @@ def sample_tweet_data():
                                 },
                             ]
                         },
+                        "quoted_status_result": {
+                            "result": {
+                                "__typename": "Tweet",
+                                "rest_id": "987654321",
+                                "views": {"count": "3000"},
+                                "legacy": {
+                                    "created_at": "Wed Feb 28 10:00:00 +0000 2024",
+                                    "full_text": "This is a quoted tweet",
+                                    "favorite_count": 50,
+                                    "retweet_count": 20,
+                                },
+                                "core": {
+                                    "user_results": {
+                                        "result": {
+                                            "legacy": {
+                                                "screen_name": "quoteduser",
+                                                "name": "Quoted User",
+                                                "followers_count": 2000,
+                                            }
+                                        }
+                                    }
+                                },
+                                "note_tweet": {"note_tweet_results": {"result": {}}},
+                            }
+                        },
                     },
                     "core": {
                         "user_results": {
@@ -57,31 +82,6 @@ def sample_tweet_data():
                         }
                     },
                     "note_tweet": {"note_tweet_results": {"result": {}}},
-                    "quoted_status_result": {
-                        "result": {
-                            "__typename": "Tweet",
-                            "rest_id": "987654321",
-                            "views": {"count": "3000"},
-                            "legacy": {
-                                "created_at": "Wed Feb 28 10:00:00 +0000 2024",
-                                "full_text": "This is a quoted tweet",
-                                "favorite_count": 50,
-                                "retweet_count": 20,
-                            },
-                            "core": {
-                                "user_results": {
-                                    "result": {
-                                        "legacy": {
-                                            "screen_name": "quoteduser",
-                                            "name": "Quoted User",
-                                            "followers_count": 2000,
-                                        }
-                                    }
-                                }
-                            },
-                            "note_tweet": {"note_tweet_results": {"result": {}}},
-                        }
-                    },
                 }
             }
         }

@@ -2,6 +2,12 @@
 Constants and configuration values for the xtract library.
 """
 
+import logging
+from xtract.config.logging import get_logger
+
+# Create a logger for this module
+logger = get_logger(__name__)
+
 # Default bearer token for X API
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 
@@ -73,3 +79,5 @@ DEFAULT_FIELD_TOGGLES = {
 
 # Default output directory
 DEFAULT_OUTPUT_DIR = "x_post_downloads"
+
+logger.debug("Constants module initialized")

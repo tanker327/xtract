@@ -2,6 +2,8 @@
 Configuration module for the xtract library.
 """
 
+import logging
+from xtract.config.logging import get_logger
 from xtract.config.constants import (
     BEARER_TOKEN,
     DEFAULT_HEADERS,
@@ -11,6 +13,10 @@ from xtract.config.constants import (
     DEFAULT_FIELD_TOGGLES,
     DEFAULT_OUTPUT_DIR,
 )
+
+# Create a logger for this module
+logger = get_logger(__name__)
+logger.debug("Config module initialized")
 
 __all__ = [
     "BEARER_TOKEN",

@@ -3,7 +3,13 @@ Models for user data from X posts.
 """
 
 from dataclasses import dataclass
+import logging
 from typing import Dict, Any
+
+from xtract.config.logging import get_logger
+
+# Get a logger for this module
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -36,7 +42,8 @@ class UserDetails:
         Returns:
             UserDetails: Populated instance
         """
-        return cls(
+        logger.debug(f"Creating UserDetails for user: {data.get('screen_name', 'unknown')}")
+        user = cls(
             name=data.get("name", ""),
             screen_name=data.get("screen_name", ""),
             description=data.get("description", ""),
@@ -52,3 +59,5 @@ class UserDetails:
             is_verified=data.get("verified", False),
             is_blue_verified=data.get("is_blue_verified", False),
         )
+        logger.debug(f"Successfully created UserDetails for {user.screen_name}")
+        return user
