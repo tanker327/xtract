@@ -1,0 +1,26 @@
+{
+    "rules": [
+        {
+            "name": "git-operations",
+            "description": "Do not run any git operations (add, commit, push, pull, etc.) unless explicitly instructed to do so",
+            "enabled": true
+        }
+    ],
+    "python": {
+        "formatting": {
+            "provider": "black"
+        },
+        "analysis": {
+            "enableTypeChecking": true,
+            "extraPaths": ["src"]
+        }
+    },
+    "terminal": {
+        "requireUserApprovalForAllCommands": true
+    },
+    "editor": {
+        "formatOnSave": true,
+        "tabSize": 4,
+        "insertSpaces": true
+    }
+}
