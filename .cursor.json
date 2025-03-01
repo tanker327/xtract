@@ -2,7 +2,7 @@
     "rules": [
         {
             "name": "git-operations",
-            "description": "Do not run any git operations (add, commit, push, pull, etc.) unless explicitly instructed to do so",
+            "description": "Before executing any git operations (add, commit, push, pull, etc.), ALWAYS get explicit confirmation from the user. Do not execute any git commands without prior user confirmation, even if the user's request seems to imply git operations.",
             "enabled": true
         }
     ],
