@@ -124,8 +124,15 @@ class Post:
             post_data=post_data,
         )
 
-        # Handle quoted tweet if present
-        quoted = legacy.get("quoted_status_result", {}).get("result", {})
+        # Handle quoted tweet if present - check both possible locations
+        quoted = None
+        # Check in the tweet object (this is where it should be for most APIs)
+        if "quoted_status_result" in tweet:
+            quoted = tweet.get("quoted_status_result", {}).get("result", {})
+        # Check in the legacy object as a fallback (older API responses may put it here)
+        elif "quoted_status_result" in legacy:
+            quoted = legacy.get("quoted_status_result", {}).get("result", {})
+            
         if quoted:
             logger.debug(f"Found quoted tweet with ID: {quoted.get('rest_id', 'unknown')}")
             quoted_legacy = quoted.get("legacy", {})
