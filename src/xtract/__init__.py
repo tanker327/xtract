@@ -9,7 +9,7 @@ from xtract.models.post import Post, PostData
 from xtract.models.user import UserDetails
 from xtract.utils.markdown import post_to_markdown, save_post_as_markdown
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # Configure default logging
 configure_logging()
