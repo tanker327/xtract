@@ -7,10 +7,10 @@ import json
 import logging
 import requests
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from urllib.parse import urlparse
 
-from xtract.api.errors import APIError
+from xtract.api.errors import APIError, TokenExpiredError
 from xtract.config.constants import (
     DEFAULT_HEADERS,
     GUEST_TOKEN_URL,
@@ -27,13 +27,14 @@ from xtract.utils.file import save_json, ensure_directory
 logger = get_logger(__name__)
 
 
-def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename: str = "guest_token.json") -> Optional[str]:
+def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename: str = "guest_token.json", force_refresh: bool = False) -> Optional[str]:
     """
     Fetch a guest token from X's API or retrieve from cache.
 
     Args:
         token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
         token_cache_filename: Filename for the token cache (default: "guest_token.json")
+        force_refresh: If True, ignores cached token and fetches a new one (default: False)
 
     Returns:
         str: Guest token if successful, None otherwise
@@ -45,8 +46,8 @@ def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename:
     ensure_directory(token_cache_dir)
     token_file_path = os.path.join(token_cache_dir, token_cache_filename)
     
-    # Check if cached token exists
-    if os.path.exists(token_file_path):
+    # Check if cached token exists and we're not forcing a refresh
+    if not force_refresh and os.path.exists(token_file_path):
         try:
             with open(token_file_path, 'r') as f:
                 token_data = json.load(f)
@@ -56,6 +57,8 @@ def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename:
         except (json.JSONDecodeError, IOError) as e:
             logger.warning(f"Failed to read cached token: {e}")
             # Continue to fetch a new token
+    elif force_refresh:
+        logger.info("Forcing token refresh, fetching new token")
     
     # Fetch new token
     headers = DEFAULT_HEADERS.copy()
@@ -80,6 +83,23 @@ def get_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename:
         raise APIError(f"Failed to fetch guest token: {e}")
 
 
+def invalidate_guest_token(token_cache_dir: str = "/tmp/xtract/", token_cache_filename: str = "guest_token.json") -> None:
+    """
+    Invalidate (delete) a cached guest token.
+
+    Args:
+        token_cache_dir: Directory where the token is cached (default: "/tmp/xtract/")
+        token_cache_filename: Filename for the token cache (default: "guest_token.json")
+    """
+    token_file_path = os.path.join(token_cache_dir, token_cache_filename)
+    if os.path.exists(token_file_path):
+        try:
+            os.remove(token_file_path)
+            logger.info(f"Invalidated guest token at: {token_file_path}")
+        except OSError as e:
+            logger.warning(f"Failed to invalidate token file: {e}")
+
+
 def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
     """
     Fetch tweet data using the GraphQL endpoint.
@@ -92,7 +112,8 @@ def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
         Dict[str, Any]: Tweet data from the API
 
     Raises:
-        APIError: If the API request fails
+        TokenExpiredError: If the API returns a 403 error (typically means token expired)
+        APIError: If the API request fails for other reasons
     """
     logger.debug(f"Preparing to fetch data for tweet ID: {tweet_id}")
     params = {
@@ -110,9 +131,19 @@ def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
     try:
         logger.debug(f"Sending request to {TWEET_DATA_URL}")
         response = requests.get(TWEET_DATA_URL, headers=headers, params=params)
+        
+        # Check specifically for 403 errors which typically indicate token expiration
+        if response.status_code == 403:
+            error_msg = f"Token expired or invalid (403 Forbidden) for tweet {tweet_id}: {response.text}"
+            logger.warning(error_msg)
+            raise TokenExpiredError(error_msg)
+            
         response.raise_for_status()
         logger.debug(f"Successfully received response for tweet ID: {tweet_id}")
         return response.json()
+    except requests.HTTPError as e:
+        logger.error(f"HTTP error fetching tweet {tweet_id}: {e}")
+        raise APIError(f"HTTP error fetching tweet {tweet_id}: {e}")
     except requests.RequestException as e:
         logger.error(f"Failed to fetch tweet {tweet_id}: {e}")
         raise APIError(f"Failed to fetch tweet {tweet_id}: {e}")
@@ -125,6 +156,7 @@ def download_x_post(
     save_raw_response_to_file: bool = False,
     token_cache_dir: str = "/tmp/xtract/",
     token_cache_filename: str = "guest_token.json",
+    max_retries: int = 3,
 ) -> Optional[Post]:
     """
     Download an X (Twitter) post by its ID or URL.
@@ -137,6 +169,7 @@ def download_x_post(
         save_raw_response_to_file: Whether to save the data to files (default: False)
         token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
         token_cache_filename: Filename for the token cache (default: "guest_token.json")
+        max_retries: Maximum number of retries for token expiration (default: 3)
 
     Returns:
         Post object if successful, None otherwise
@@ -166,31 +199,53 @@ def download_x_post(
         logger.debug(f"Creating tweet directory: {tweet_dir}")
         ensure_directory(tweet_dir)
 
-    headers = DEFAULT_HEADERS.copy()
-    if not cookies:
+    # Try to fetch the tweet with retries for token expiration
+    retries = 0
+    force_refresh = False
+
+    while retries < max_retries:
+        headers = DEFAULT_HEADERS.copy()
+        if not cookies:
+            try:
+                logger.debug(f"No cookies provided, attempting to get guest token (retry {retries+1}/{max_retries})")
+                headers["x-guest-token"] = get_guest_token(token_cache_dir, token_cache_filename, force_refresh)
+                print(f"Using guest token: {headers['x-guest-token']}")
+                logger.info(f"Using guest token: {headers['x-guest-token']} (retry {retries+1}/{max_retries})")
+            except APIError as e:
+                logger.error(f"Failed to get guest token: {e}")
+                print(e)
+                return None
+        else:
+            logger.info("Using provided cookies for authentication")
+            headers["Cookie"] = cookies
+            print("Using provided cookies")
+
+        print(f"Fetching data for tweet ID: {tweet_id}")
+        logger.info(f"Fetching data for tweet ID: {tweet_id}")
         try:
-            logger.debug("No cookies provided, attempting to get guest token")
-            headers["x-guest-token"] = get_guest_token(token_cache_dir, token_cache_filename)
-            print(f"Using guest token: {headers['x-guest-token']}")
-            logger.info(f"Using guest token: {headers['x-guest-token']}")
+            data = fetch_tweet_data(tweet_id, headers)
+            # If we get here, the request succeeded
+            break
+        except TokenExpiredError as e:
+            retries += 1
+            if retries >= max_retries:
+                logger.error(f"Giving up after {max_retries} token expiration retries")
+                print(f"Failed after {max_retries} attempts with token expiration: {e}")
+                return None
+                
+            # Invalidate the token and try again with a fresh one
+            logger.warning(f"Token expired, invalidating and retrying ({retries}/{max_retries})")
+            print(f"Token expired, retrying with a fresh token (attempt {retries+1}/{max_retries})")
+            invalidate_guest_token(token_cache_dir, token_cache_filename)
+            force_refresh = True
+            continue
+            
         except APIError as e:
-            logger.error(f"Failed to get guest token: {e}")
+            logger.error(f"Failed to fetch tweet data: {e}")
             print(e)
             return None
-    else:
-        logger.info("Using provided cookies for authentication")
-        headers["Cookie"] = cookies
-        print("Using provided cookies")
 
-    print(f"Fetching data for tweet ID: {tweet_id}")
-    logger.info(f"Fetching data for tweet ID: {tweet_id}")
-    try:
-        data = fetch_tweet_data(tweet_id, headers)
-    except APIError as e:
-        logger.error(f"Failed to fetch tweet data: {e}")
-        print(e)
-        return None
-
+    # Process the tweet data
     logger.debug("Processing retrieved tweet data")
     tweet = data.get("data", {}).get("tweetResult", {}).get("result", {})
     legacy = tweet.get("legacy", {})

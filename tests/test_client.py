@@ -1,10 +1,10 @@
 import os
 import pytest
 import requests
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
-from xtract.api.client import get_guest_token, fetch_tweet_data, download_x_post
-from xtract.api.errors import APIError
+from xtract.api.client import get_guest_token, fetch_tweet_data, download_x_post, invalidate_guest_token
+from xtract.api.errors import APIError, TokenExpiredError
 from xtract.models.post import Post
 
 
@@ -179,7 +179,7 @@ def test_download_x_post_success(mock_fetch, mock_token, mock_save, mock_dir):
     assert post.view_count == "500"
 
     # Verify mocks were called correctly
-    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
+    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
     mock_fetch.assert_called_once()
     assert mock_save.call_count == 2
     mock_dir.assert_called_once()
@@ -197,7 +197,7 @@ def test_download_x_post_guest_token_error(mock_token):
     )
 
     assert post is None
-    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
+    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
 
 
 @patch("xtract.api.client.get_guest_token")
@@ -214,7 +214,7 @@ def test_download_x_post_fetch_error(mock_fetch, mock_token):
     )
 
     assert post is None
-    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
+    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
     mock_fetch.assert_called_once()
 
 
@@ -319,7 +319,7 @@ def test_download_x_post_with_url(mock_fetch, mock_token, mock_save, mock_dir):
     assert post.username == "testuser"
 
     # Verify mocks were called correctly with the extracted ID
-    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
+    mock_token.assert_called_once_with(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
     mock_fetch.assert_called_once()
     # Check that the fetch was called with the ID extracted from the URL
     called_id = mock_fetch.call_args[0][0]
@@ -372,3 +372,105 @@ def test_get_guest_token_with_custom_cache_dir(mock_post, mock_exists, mock_ensu
     # Verify that it checked for the file in the custom directory with custom filename
     mock_exists.assert_called_once_with(os.path.join(custom_dir, custom_filename))
     mock_ensure_dir.assert_called_once_with(custom_dir)
+
+
+@patch("os.path.exists")
+@patch("os.remove")
+def test_invalidate_guest_token(mock_remove, mock_exists):
+    """Test invalidating a cached guest token."""
+    # Set up mocks
+    mock_exists.return_value = True
+    
+    # Call function
+    invalidate_guest_token(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
+    
+    # Assertions
+    mock_exists.assert_called_once_with(os.path.join(TEST_CACHE_DIR, TEST_CACHE_FILENAME))
+    mock_remove.assert_called_once_with(os.path.join(TEST_CACHE_DIR, TEST_CACHE_FILENAME))
+
+
+@patch("requests.get")
+def test_fetch_tweet_data_token_expired(mock_get):
+    """Test handling of token expiration (403 errors)."""
+    # Create a mock response with 403 status
+    mock_response = MagicMock()
+    mock_response.status_code = 403
+    mock_response.text = "Forbidden"
+    mock_get.return_value = mock_response
+    
+    # Call function and expect TokenExpiredError
+    with pytest.raises(TokenExpiredError):
+        fetch_tweet_data("123456789", {"Authorization": "Bearer mock_token"})
+
+
+@patch("xtract.api.client.ensure_directory")
+@patch("xtract.api.client.save_json") 
+@patch("xtract.api.client.fetch_tweet_data")
+@patch("xtract.api.client.invalidate_guest_token")
+@patch("xtract.api.client.get_guest_token")
+def test_download_x_post_token_retry_success(mock_get_token, mock_invalidate, mock_fetch, mock_save, mock_dir):
+    """Test successful retry after token expiration."""
+    # First call fails with token expiration, second succeeds
+    mock_get_token.side_effect = ["expired_token", "new_token"]
+    mock_fetch.side_effect = [
+        TokenExpiredError("Token expired"),
+        {
+            "data": {
+                "tweetResult": {
+                    "result": {
+                        "rest_id": "123456789",
+                        "legacy": {"full_text": "Test tweet"},
+                        "core": {"user_results": {"result": {"legacy": {"screen_name": "testuser"}}}},
+                        "note_tweet": {"note_tweet_results": {"result": {}}},
+                    }
+                }
+            }
+        }
+    ]
+    
+    # Call the function
+    post = download_x_post(
+        "123456789",
+        token_cache_dir=TEST_CACHE_DIR,
+        token_cache_filename=TEST_CACHE_FILENAME
+    )
+    
+    # Assertions
+    assert isinstance(post, Post)
+    assert post.tweet_id == "123456789"
+    
+    # Verify the retry logic happened
+    assert mock_get_token.call_count == 2
+    assert mock_invalidate.call_count == 1
+    assert mock_fetch.call_count == 2
+    
+    # Verify the second call had force_refresh=True
+    assert mock_get_token.call_args_list[0] == call(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
+    assert mock_get_token.call_args_list[1] == call(TEST_CACHE_DIR, TEST_CACHE_FILENAME, True)
+
+
+@patch("xtract.api.client.ensure_directory")
+@patch("xtract.api.client.fetch_tweet_data")
+@patch("xtract.api.client.invalidate_guest_token")
+@patch("xtract.api.client.get_guest_token")
+def test_download_x_post_max_retries_exceeded(mock_get_token, mock_invalidate, mock_fetch, mock_dir):
+    """Test giving up after max retries for token expiration."""
+    # All calls fail with token expiration
+    mock_get_token.return_value = "expired_token"
+    mock_fetch.side_effect = TokenExpiredError("Token expired")
+    
+    # Call the function with max_retries=2
+    post = download_x_post(
+        "123456789",
+        token_cache_dir=TEST_CACHE_DIR,
+        token_cache_filename=TEST_CACHE_FILENAME,
+        max_retries=2
+    )
+    
+    # Assertions
+    assert post is None  # Should return None after giving up
+    
+    # Verify retry counts
+    assert mock_get_token.call_count == 2  # Initial + 1 retry
+    assert mock_invalidate.call_count == 1  # One invalidation after first failure
+    assert mock_fetch.call_count == 2  # Two fetch attempts total
