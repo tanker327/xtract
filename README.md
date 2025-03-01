@@ -2,6 +2,10 @@
 
 A Python library for extracting data from X (formerly Twitter) posts.
 
+## Version
+
+Current version: 1.2.3
+
 ## Features
 
 - Download post content including text, media, and metadata
@@ -131,6 +135,47 @@ url: https://x.com/xuser/status/1895573480835539451
 
 This is the post text content...
 ```
+
+### Advanced Features
+
+#### Token Expiration Handling
+
+The library includes automatic token expiration handling with retry logic:
+
+```python
+from xtract import download_x_post
+
+# Default behavior automatically retries on token expiration
+post = download_x_post("1895573480835539451")
+
+# Control maximum number of retries for token expiration
+post = download_x_post("1895573480835539451", max_retries=3)
+
+# Disable retries
+post = download_x_post("1895573480835539451", max_retries=0)
+```
+
+#### Quoted Tweet Support
+
+Xtract properly handles and includes quoted tweets in the downloaded data:
+
+```python
+from xtract import download_x_post
+
+# Download a post with a quoted tweet
+post = download_x_post("1895573480835539451")
+post_dict = post.to_dict()
+
+# Check if post contains a quoted tweet
+if 'quoted_tweet' in post_dict:
+    quoted_tweet = post_dict['quoted_tweet']
+    print(f"Quoted tweet ID: {quoted_tweet['tweet_id']}")
+    print(f"Quoted tweet author: {quoted_tweet['username']}")
+    print(f"Quoted tweet text: {quoted_tweet['text']}")
+```
+
+The Markdown output includes:
+- YAML frontmatter with metadata (tweet ID, author, statistics, etc.)
 
 ### Command Line Usage
 
