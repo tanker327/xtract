@@ -1,0 +1,404 @@
+{
+    "data": {
+        "tweetResult": {
+            "result": {
+                "__typename": "Tweet",
+                "rest_id": "1895573480835539451",
+                "core": {
+                    "user_results": {
+                        "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjo0NDE5NjM5Nw==",
+                            "rest_id": "44196397",
+                            "affiliates_highlighted_label": {
+                                "label": {
+                                    "url": {
+                                        "url": "https://twitter.com/X",
+                                        "urlType": "DeepLink"
+                                    },
+                                    "badge": {
+                                        "url": "https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg"
+                                    },
+                                    "description": "X",
+                                    "userLabelType": "BusinessLabel",
+                                    "userLabelDisplayType": "Badge"
+                                }
+                            },
+                            "parody_commentary_fan_label": "None",
+                            "is_blue_verified": true,
+                            "profile_image_shape": "Circle",
+                            "legacy": {
+                                "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                "default_profile": false,
+                                "default_profile_image": false,
+                                "description": "",
+                                "entities": {
+                                    "description": {
+                                        "urls": []
+                                    }
+                                },
+                                "fast_followers_count": 0,
+                                "favourites_count": 129799,
+                                "followers_count": 219100557,
+                                "friends_count": 1077,
+                                "has_custom_timelines": true,
+                                "is_translator": false,
+                                "listed_count": 160985,
+                                "location": "",
+                                "media_count": 3525,
+                                "name": "Elon Musk",
+                                "normal_followers_count": 219100557,
+                                "pinned_tweet_ids_str": [],
+                                "possibly_sensitive": false,
+                                "profile_banner_url": "https://pbs.twimg.com/profile_banners/44196397/1739948056",
+                                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+                                "profile_interstitial_type": "",
+                                "screen_name": "elonmusk",
+                                "statuses_count": 72840,
+                                "translator_type": "none",
+                                "verified": false,
+                                "withheld_in_countries": []
+                            },
+                            "professional": {
+                                "rest_id": "1679729435447275522",
+                                "professional_type": "Creator",
+                                "category": []
+                            },
+                            "tipjar_settings": {
+                                "is_enabled": false,
+                                "bandcamp_handle": "",
+                                "bitcoin_handle": "",
+                                "cash_app_handle": "",
+                                "ethereum_handle": "",
+                                "gofundme_handle": "",
+                                "patreon_handle": "",
+                                "pay_pal_handle": "",
+                                "venmo_handle": ""
+                            }
+                        }
+                    }
+                },
+                "unmention_data": {},
+                "edit_control": {
+                    "edit_tweet_ids": ["1895573480835539451"],
+                    "editable_until_msecs": "1740778510000",
+                    "is_edit_eligible": true,
+                    "edits_remaining": "5"
+                },
+                "is_translatable": false,
+                "views": {
+                    "count": "3844959",
+                    "state": "EnabledWithCount"
+                },
+                "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+                "grok_analysis_button": true,
+                "quoted_status_result": {
+                    "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1895571173691494806",
+                        "core": {
+                            "user_results": {
+                                "result": {
+                                    "__typename": "User",
+                                    "id": "VXNlcjoxMjk3NjUxMTc4MjU2MjU3MDI0",
+                                    "rest_id": "1297651178256257024",
+                                    "affiliates_highlighted_label": {},
+                                    "parody_commentary_fan_label": "None",
+                                    "is_blue_verified": true,
+                                    "profile_image_shape": "Circle",
+                                    "legacy": {
+                                        "created_at": "Sun Aug 23 21:45:35 +0000 2020",
+                                        "default_profile": true,
+                                        "default_profile_image": false,
+                                        "description": "Citizen journalism with a humorous flair. Following Fintech, Crypto, AI, Longevity, Politics, Memes, and whatever the current thing is.",
+                                        "entities": {
+                                            "description": {
+                                                "urls": []
+                                            }
+                                        },
+                                        "fast_followers_count": 0,
+                                        "favourites_count": 25387,
+                                        "followers_count": 817705,
+                                        "friends_count": 0,
+                                        "has_custom_timelines": true,
+                                        "is_translator": false,
+                                        "listed_count": 4455,
+                                        "location": "The Blockchain",
+                                        "media_count": 19252,
+                                        "name": "Autism Capital \ud83e\udde9",
+                                        "normal_followers_count": 817705,
+                                        "pinned_tweet_ids_str": [
+                                            "1895532887325462926"
+                                        ],
+                                        "possibly_sensitive": false,
+                                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1297651178256257024/1700628740",
+                                        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1607967887305887745/pN-Bl6pc_normal.jpg",
+                                        "profile_interstitial_type": "",
+                                        "screen_name": "AutismCapital",
+                                        "statuses_count": 54714,
+                                        "translator_type": "none",
+                                        "verified": false,
+                                        "withheld_in_countries": []
+                                    },
+                                    "tipjar_settings": {
+                                        "is_enabled": false,
+                                        "bandcamp_handle": "",
+                                        "bitcoin_handle": "",
+                                        "cash_app_handle": "",
+                                        "ethereum_handle": "",
+                                        "gofundme_handle": "",
+                                        "patreon_handle": "",
+                                        "pay_pal_handle": "",
+                                        "venmo_handle": ""
+                                    }
+                                }
+                            }
+                        },
+                        "unmention_data": {},
+                        "edit_control": {
+                            "edit_tweet_ids": ["1895571173691494806"],
+                            "editable_until_msecs": "1740777960000",
+                            "is_edit_eligible": true,
+                            "edits_remaining": "5"
+                        },
+                        "is_translatable": false,
+                        "views": {
+                            "count": "4546244",
+                            "state": "EnabledWithCount"
+                        },
+                        "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+                        "note_tweet": {
+                            "is_expandable": true,
+                            "note_tweet_results": {
+                                "result": {
+                                    "id": "Tm90ZVR3ZWV0OjE4OTU1NzExNzM1NzQxMjc2MTY=",
+                                    "text": "\ud83d\udea8NEW: Elon Musk talks with Joe Rogan about George Soros and how he hacked the systems with NGOs\n\n\"George Soros is a systems hacker. He is a genius arbitrager. He figured out that you could leverage a small amount of money to create a non-profit then lobby politicians to send a ton of money to that non profit so you can take what might be a $10M donation and leverage it into a $1B NGO.\n\nThen the government continues to fund it every year, and it will have a nice sounding name like \"The Institute for Peace,\" but really it's a grafting machine.\"",
+                                    "entity_set": {
+                                        "hashtags": [],
+                                        "symbols": [],
+                                        "timestamps": [],
+                                        "urls": [],
+                                        "user_mentions": []
+                                    },
+                                    "richtext": {
+                                        "richtext_tags": []
+                                    },
+                                    "media": {
+                                        "inline_media": []
+                                    }
+                                }
+                            }
+                        },
+                        "grok_analysis_button": true,
+                        "legacy": {
+                            "bookmark_count": 1654,
+                            "bookmarked": false,
+                            "created_at": "Fri Feb 28 20:26:00 +0000 2025",
+                            "conversation_id_str": "1895571173691494806",
+                            "display_text_range": [0, 277],
+                            "entities": {
+                                "hashtags": [],
+                                "media": [
+                                    {
+                                        "display_url": "pic.x.com/fo2Pw1G3yx",
+                                        "expanded_url": "https://x.com/AutismCapital/status/1895571173691494806/video/1",
+                                        "id_str": "1895570785986813952",
+                                        "indices": [278, 301],
+                                        "media_key": "7_1895570785986813952",
+                                        "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1895570785986813952/pu/img/1LvcehrLrGt8V_A9.jpg",
+                                        "type": "video",
+                                        "url": "https://t.co/fo2Pw1G3yx",
+                                        "additional_media_info": {
+                                            "monetizable": false
+                                        },
+                                        "ext_media_availability": {
+                                            "status": "Available"
+                                        },
+                                        "sizes": {
+                                            "large": {
+                                                "h": 534,
+                                                "w": 962,
+                                                "resize": "fit"
+                                            },
+                                            "medium": {
+                                                "h": 534,
+                                                "w": 962,
+                                                "resize": "fit"
+                                            },
+                                            "small": {
+                                                "h": 377,
+                                                "w": 680,
+                                                "resize": "fit"
+                                            },
+                                            "thumb": {
+                                                "h": 150,
+                                                "w": 150,
+                                                "resize": "crop"
+                                            }
+                                        },
+                                        "original_info": {
+                                            "height": 534,
+                                            "width": 962,
+                                            "focus_rects": []
+                                        },
+                                        "allow_download_status": {
+                                            "allow_download": true
+                                        },
+                                        "video_info": {
+                                            "aspect_ratio": [481, 267],
+                                            "duration_millis": 79357,
+                                            "variants": [
+                                                {
+                                                    "content_type": "application/x-mpegURL",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/pl/n2XDKrrEweE7k997.m3u8?tag=12&v=027"
+                                                },
+                                                {
+                                                    "bitrate": 256000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/486x270/EfbxrLXZ3kM64tWm.mp4?tag=12"
+                                                },
+                                                {
+                                                    "bitrate": 832000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/648x360/uoXErvS7t_sXGr7C.mp4?tag=12"
+                                                },
+                                                {
+                                                    "bitrate": 2176000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/962x534/1VdkrhxmcDXk6tz0.mp4?tag=12"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "symbols": [],
+                                "timestamps": [],
+                                "urls": [],
+                                "user_mentions": []
+                            },
+                            "extended_entities": {
+                                "media": [
+                                    {
+                                        "display_url": "pic.x.com/fo2Pw1G3yx",
+                                        "expanded_url": "https://x.com/AutismCapital/status/1895571173691494806/video/1",
+                                        "id_str": "1895570785986813952",
+                                        "indices": [278, 301],
+                                        "media_key": "7_1895570785986813952",
+                                        "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1895570785986813952/pu/img/1LvcehrLrGt8V_A9.jpg",
+                                        "type": "video",
+                                        "url": "https://t.co/fo2Pw1G3yx",
+                                        "additional_media_info": {
+                                            "monetizable": false
+                                        },
+                                        "ext_media_availability": {
+                                            "status": "Available"
+                                        },
+                                        "sizes": {
+                                            "large": {
+                                                "h": 534,
+                                                "w": 962,
+                                                "resize": "fit"
+                                            },
+                                            "medium": {
+                                                "h": 534,
+                                                "w": 962,
+                                                "resize": "fit"
+                                            },
+                                            "small": {
+                                                "h": 377,
+                                                "w": 680,
+                                                "resize": "fit"
+                                            },
+                                            "thumb": {
+                                                "h": 150,
+                                                "w": 150,
+                                                "resize": "crop"
+                                            }
+                                        },
+                                        "original_info": {
+                                            "height": 534,
+                                            "width": 962,
+                                            "focus_rects": []
+                                        },
+                                        "allow_download_status": {
+                                            "allow_download": true
+                                        },
+                                        "video_info": {
+                                            "aspect_ratio": [481, 267],
+                                            "duration_millis": 79357,
+                                            "variants": [
+                                                {
+                                                    "content_type": "application/x-mpegURL",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/pl/n2XDKrrEweE7k997.m3u8?tag=12&v=027"
+                                                },
+                                                {
+                                                    "bitrate": 256000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/486x270/EfbxrLXZ3kM64tWm.mp4?tag=12"
+                                                },
+                                                {
+                                                    "bitrate": 832000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/648x360/uoXErvS7t_sXGr7C.mp4?tag=12"
+                                                },
+                                                {
+                                                    "bitrate": 2176000,
+                                                    "content_type": "video/mp4",
+                                                    "url": "https://video.twimg.com/ext_tw_video/1895570785986813952/pu/vid/avc1/962x534/1VdkrhxmcDXk6tz0.mp4?tag=12"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "favorite_count": 12228,
+                            "favorited": false,
+                            "full_text": "\ud83d\udea8NEW: Elon Musk talks with Joe Rogan about George Soros and how he hacked the systems with NGOs\n\n\"George Soros is a systems hacker. He is a genius arbitrager. He figured out that you could leverage a small amount of money to create a non-profit then lobby politicians to send a https://t.co/fo2Pw1G3yx",
+                            "is_quote_status": false,
+                            "lang": "en",
+                            "possibly_sensitive": false,
+                            "possibly_sensitive_editable": true,
+                            "quote_count": 155,
+                            "reply_count": 405,
+                            "retweet_count": 2967,
+                            "retweeted": false,
+                            "user_id_str": "1297651178256257024",
+                            "id_str": "1895571173691494806"
+                        }
+                    }
+                },
+                "legacy": {
+                    "bookmark_count": 977,
+                    "bookmarked": false,
+                    "created_at": "Fri Feb 28 20:35:10 +0000 2025",
+                    "conversation_id_str": "1895573480835539451",
+                    "display_text_range": [0, 20],
+                    "entities": {
+                        "hashtags": [],
+                        "symbols": [],
+                        "timestamps": [],
+                        "urls": [],
+                        "user_mentions": []
+                    },
+                    "favorite_count": 28086,
+                    "favorited": false,
+                    "full_text": "That\u2019s the situation",
+                    "is_quote_status": true,
+                    "lang": "en",
+                    "quote_count": 88,
+                    "quoted_status_id_str": "1895571173691494806",
+                    "quoted_status_permalink": {
+                        "url": "https://t.co/PDRIXc223F",
+                        "expanded": "https://twitter.com/autismcapital/status/1895571173691494806",
+                        "display": "x.com/autismcapital/\u2026"
+                    },
+                    "reply_count": 1284,
+                    "retweet_count": 6269,
+                    "retweeted": false,
+                    "user_id_str": "44196397",
+                    "id_str": "1895573480835539451"
+                }
+            }
+        }
+    }
+}
