@@ -38,7 +38,12 @@ def main():
             print(f"Quoted videos: {len(post.quoted_tweet.videos)}")
             
         print("\n\n")    
-        print(post_to_markdown(post))
+        metadata, markdown = post_to_markdown(post)
+        print("Metadata:")
+        for key, value in metadata.items():
+            print(f"{key}: {value}")
+        print("\nMarkdown content:")
+        print(markdown)
     else:
         print("Test failed: Could not download post.")
 

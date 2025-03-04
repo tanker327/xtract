@@ -13,13 +13,21 @@ from xtract.utils.markdown import post_to_markdown, save_post_as_markdown
 def test_post_to_markdown(sample_post):
     """Test converting a post to Markdown."""
     # Call the function
-    markdown = post_to_markdown(sample_post)
+    metadata, markdown = post_to_markdown(sample_post)
     
     # Check the result
+    assert metadata is not None
     assert markdown is not None
+    assert isinstance(metadata, dict)
     assert isinstance(markdown, str)
     
-    # Check that it contains the expected elements
+    # Check metadata
+    assert metadata["tweet_id"] == sample_post.tweet_id
+    assert metadata["author"] == sample_post.username
+    assert metadata["views"] == sample_post.view_count
+    assert metadata["likes"] == sample_post.post_data.favorite_count
+    
+    # Check that markdown contains the expected elements
     assert f"# Post by @{sample_post.username}" in markdown
     assert sample_post.text in markdown
     assert "## Stats" in markdown
@@ -55,10 +63,16 @@ def test_post_to_markdown_with_quoted_tweet(sample_post):
     
     # Patch post_to_markdown for the quoted tweet to avoid recursion issues with the mock
     with patch("xtract.utils.markdown.post_to_markdown", side_effect=[
-        "Quoted tweet markdown", "Main post with quoted tweet"
+        ({}, "Quoted tweet markdown"),  # First call for quoted tweet
+        ({}, "Main post with quoted tweet")  # Second call for main post
     ]):
         # Call the function
-        markdown = post_to_markdown(sample_post)
+        metadata, markdown = post_to_markdown(sample_post)
+        
+        # Check metadata
+        assert metadata["has_quoted_tweet"] is True
+        assert metadata["quoted_tweet_id"] == quoted_post.tweet_id
+        assert metadata["quoted_tweet_author"] == quoted_post.username
         
         # Check that it references the quoted tweet
         assert "## Quoted Tweet" in markdown
@@ -68,7 +82,10 @@ def test_save_post_as_markdown(sample_post):
     """Test saving a post as a Markdown file."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Patch post_to_markdown to return a known value
-        with patch("xtract.utils.markdown.post_to_markdown", return_value="# Test Markdown"):
+        with patch("xtract.utils.markdown.post_to_markdown", return_value=(
+            {"tweet_id": "123", "author": "test"},
+            "# Test Markdown"
+        )):
             # Call the function
             file_path = save_post_as_markdown(sample_post, output_dir=temp_dir)
             
@@ -81,4 +98,7 @@ def test_save_post_as_markdown(sample_post):
             # Verify the file contains the expected content
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                assert content == "# Test Markdown" 
+                assert "---" in content  # Check for YAML frontmatter
+                assert "tweet_id: 123" in content
+                assert "author: test" in content
+                assert "# Test Markdown" in content 
