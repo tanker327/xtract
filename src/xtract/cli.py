@@ -35,6 +35,9 @@ def main():
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Enable verbose logging output"
     )
+    parser.add_argument(
+        "--include-replies", action="store_true", default=False, help="Fetch and include replies in the post data"
+    )
 
     args = parser.parse_args()
     
@@ -64,6 +67,7 @@ def main():
             output_dir=args.output_dir,
             cookies=args.cookies,
             save_raw_response_to_file=args.save_raw,
+            include_replies=args.include_replies,
         )
 
         if post:
