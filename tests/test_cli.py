@@ -57,6 +57,7 @@ def test_cli_basic(mock_args, mock_download, mock_post):
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
     mock_args.return_value.markdown = False  # Add the new markdown option
+    mock_args.return_value.include_replies = False  # Add the new include_replies option
 
     # Setup mock download function
     mock_download.return_value = mock_post
@@ -67,7 +68,7 @@ def test_cli_basic(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the correct parameters
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=False
+        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=False, include_replies=False
     )
 
 
@@ -83,6 +84,7 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
         mock_args.return_value.save_raw = False
         mock_args.return_value.pretty = False
         mock_args.return_value.markdown = False  # Add the new markdown option
+        mock_args.return_value.include_replies = False  # Add the new include_replies option
 
         # Setup mock download function
         mock_download.return_value = mock_post
@@ -93,7 +95,7 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
 
         # Verify the download function was called with the correct output dir
         mock_download.assert_called_once_with(
-            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
+            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False, include_replies=False
         )
 
 
@@ -108,6 +110,7 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
     mock_args.return_value.markdown = False  # Add the new markdown option
+    mock_args.return_value.include_replies = False  # Add the new include_replies option
 
     # Setup mock download function
     mock_download.return_value = mock_post
@@ -122,6 +125,7 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
         output_dir="x_post_downloads",
         cookies="auth_token=abc; ct0=123",
         save_raw_response_to_file=False,
+        include_replies=False,
     )
 
 
@@ -136,6 +140,7 @@ def test_cli_download_failure(mock_args, mock_download):
     mock_args.return_value.save_raw = False
     mock_args.return_value.pretty = False
     mock_args.return_value.markdown = False  # Add the new markdown option
+    mock_args.return_value.include_replies = False  # Add the new include_replies option
 
     # Setup mock download function to return None (failure)
     mock_download.return_value = None
@@ -158,6 +163,7 @@ def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
     mock_args.return_value.save_raw = True
     mock_args.return_value.pretty = False
     mock_args.return_value.markdown = False  # Add the new markdown option
+    mock_args.return_value.include_replies = False  # Add the new include_replies option
 
     # Setup mock download function
     mock_download.return_value = mock_post
@@ -168,7 +174,7 @@ def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with save_raw_response_to_file=True
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=True
+        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=True, include_replies=False
     )
 
 
@@ -185,6 +191,7 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
         mock_args.return_value.save_raw = False
         mock_args.return_value.pretty = False
         mock_args.return_value.markdown = True
+        mock_args.return_value.include_replies = False  # Add the new include_replies option
 
         # Setup mock download function
         mock_download.return_value = mock_post
@@ -198,7 +205,7 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
 
         # Verify the download function was called with correct parameters
         mock_download.assert_called_once_with(
-            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
+            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False, include_replies=False
         )
         
         # Verify the save_post_as_markdown function was called with correct parameters
