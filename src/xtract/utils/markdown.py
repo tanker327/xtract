@@ -59,6 +59,8 @@ def post_to_markdown(post: Post, include_stats: bool = True, include_metadata: b
             "replies": post.post_data.reply_count,
             "quotes": post.post_data.quote_count,
             "has_quoted_tweet": bool(post.quoted_tweet),
+            "has_replies": bool(post.replies),
+            "reply_count_fetched": len(post.replies) if post.replies else 0,
             "url": f"https://x.com/{post.username}/status/{post.tweet_id}",
             "downloaded_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "downloaded_by": "xtract"
@@ -110,6 +112,22 @@ def post_to_markdown(post: Post, include_stats: bool = True, include_metadata: b
         # Indent the quoted tweet content to make it visually distinct
         quoted_md_indented = "\n".join([f"> {line}" for line in quoted_md.split("\n")])
         md.append(quoted_md_indented)
+        md.append("---")
+        md.append("")
+    
+    # Replies if present
+    if post.replies:
+        logger.debug(f"Processing {len(post.replies)} replies")
+        md.append("## Replies")
+        md.append("---")
+        for i, reply in enumerate(post.replies, 1):
+            md.append(f"### Reply {i}")
+            # Format each reply but without stats and metadata to keep it cleaner
+            reply_md = post_to_markdown(reply, include_stats=False, include_metadata=False)[1]
+            # Indent the reply content to make it visually distinct
+            reply_md_indented = "\n".join([f"> {line}" for line in reply_md.split("\n")])
+            md.append(reply_md_indented)
+            md.append("")
         md.append("---")
         md.append("")
         

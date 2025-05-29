@@ -7,7 +7,7 @@ import json
 import logging
 import requests
 from datetime import datetime
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 from urllib.parse import urlparse
 
 from xtract.api.errors import APIError, TokenExpiredError
@@ -15,8 +15,11 @@ from xtract.config.constants import (
     DEFAULT_HEADERS,
     GUEST_TOKEN_URL,
     TWEET_DATA_URL,
+    CONVERSATION_URL,
     DEFAULT_FEATURES,
     DEFAULT_FIELD_TOGGLES,
+    CONVERSATION_FEATURES,
+    CONVERSATION_FIELD_TOGGLES,
     DEFAULT_OUTPUT_DIR,
 )
 from xtract.config.logging import get_logger
@@ -149,6 +152,119 @@ def fetch_tweet_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
         raise APIError(f"Failed to fetch tweet {tweet_id}: {e}")
 
 
+def fetch_conversation_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str, Any]:
+    """
+    Fetch conversation data (replies) for a tweet using the TweetDetail GraphQL endpoint.
+
+    Args:
+        tweet_id: ID of the tweet to fetch conversation for
+        headers: Headers for the API request
+
+    Returns:
+        Dict[str, Any]: Conversation data from the API
+
+    Raises:
+        TokenExpiredError: If the API returns a 403 error (typically means token expired)
+        APIError: If the API request fails for other reasons
+    """
+    logger.debug(f"Preparing to fetch conversation data for tweet ID: {tweet_id}")
+    params = {
+        "variables": json.dumps(
+            {
+                "focalTweetId": tweet_id,
+                "with_rux_injections": False,
+                "includePromotedContent": True,
+                "withCommunity": True,
+                "withQuickPromoteEligibilityTweetFields": True,
+                "withBirdwatchNotes": True,
+                "withVoice": True,
+                "withV2Timeline": True,
+            }
+        ),
+        "features": json.dumps(CONVERSATION_FEATURES),
+        "fieldToggles": json.dumps(CONVERSATION_FIELD_TOGGLES),
+    }
+    try:
+        logger.debug(f"Sending conversation request to {CONVERSATION_URL}")
+        response = requests.get(CONVERSATION_URL, headers=headers, params=params)
+        
+        # Check specifically for 403 errors which typically indicate token expiration
+        if response.status_code == 403:
+            error_msg = f"Token expired or invalid (403 Forbidden) for conversation {tweet_id}: {response.text}"
+            logger.warning(error_msg)
+            raise TokenExpiredError(error_msg)
+            
+        response.raise_for_status()
+        logger.debug(f"Successfully received conversation response for tweet ID: {tweet_id}")
+        return response.json()
+    except requests.HTTPError as e:
+        logger.error(f"HTTP error fetching conversation {tweet_id}: {e}")
+        raise APIError(f"HTTP error fetching conversation {tweet_id}: {e}")
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch conversation {tweet_id}: {e}")
+        raise APIError(f"Failed to fetch conversation {tweet_id}: {e}")
+
+
+def parse_conversation_replies(conversation_data: Dict[str, Any]) -> List[Post]:
+    """
+    Parse conversation data to extract reply posts.
+
+    Args:
+        conversation_data: Raw conversation data from the API
+
+    Returns:
+        List[Post]: List of reply posts
+    """
+    logger.debug("Parsing conversation data to extract replies")
+    replies = []
+    
+    try:
+        # Navigate through the conversation data structure
+        threaded_conversation_with_injections = conversation_data.get("data", {}).get("threaded_conversation_with_injections_v2", {})
+        instructions = threaded_conversation_with_injections.get("instructions", [])
+        
+        for instruction in instructions:
+            if instruction.get("type") == "TimelineAddEntries":
+                entries = instruction.get("entries", [])
+                
+                for entry in entries:
+                    entry_id = entry.get("entryId", "")
+                    
+                    # Look for conversationthread entries which contain replies
+                    if "conversationthread" in entry_id:
+                        content = entry.get("content", {})
+                        items = content.get("items", [])
+                        
+                        for item in items:
+                            item_content = item.get("item", {}).get("itemContent", {})
+                            if item_content.get("itemType") == "TimelineTweet":
+                                tweet_results = item_content.get("tweet_results", {}).get("result", {})
+                                
+                                # Skip if this is not a valid tweet
+                                if tweet_results.get("__typename") != "Tweet":
+                                    continue
+                                    
+                                # Extract tweet data
+                                legacy = tweet_results.get("legacy", {})
+                                user_results = tweet_results.get("core", {}).get("user_results", {}).get("result", {})
+                                note_tweet = tweet_results.get("note_tweet", {}).get("note_tweet_results", {}).get("result", {})
+                                
+                                # Create Post object for the reply
+                                try:
+                                    reply_post = Post.from_api_data(tweet_results, legacy, user_results, note_tweet)
+                                    replies.append(reply_post)
+                                    logger.debug(f"Successfully parsed reply from user: {reply_post.username}")
+                                except Exception as e:
+                                    logger.warning(f"Failed to parse reply: {e}")
+                                    continue
+                                    
+    except Exception as e:
+        logger.error(f"Error parsing conversation data: {e}")
+        
+    logger.info(f"Successfully parsed {len(replies)} replies from conversation")
+    return replies
+
+
 def download_x_post(
     post_identifier: str,
     output_dir: str = None,
@@ -157,6 +273,7 @@ def download_x_post(
     token_cache_dir: str = "/tmp/xtract/",
     token_cache_filename: str = "guest_token.json",
     max_retries: int = 3,
+    include_replies: bool = False,
 ) -> Optional[Post]:
     """
     Download an X (Twitter) post by its ID or URL.
@@ -170,6 +287,7 @@ def download_x_post(
         token_cache_dir: Directory to cache the guest token (default: "/tmp/xtract/")
         token_cache_filename: Filename for the token cache (default: "guest_token.json")
         max_retries: Maximum number of retries for token expiration (default: 3)
+        include_replies: Whether to fetch and include replies in the post data (default: False)
 
     Returns:
         Post object if successful, None otherwise
@@ -254,6 +372,26 @@ def download_x_post(
 
     logger.debug("Creating Post object from API data")
     post = Post.from_api_data(tweet, legacy, user, note_tweet)
+
+    # Fetch replies if requested
+    if include_replies:
+        logger.info(f"Fetching replies for tweet ID: {tweet_id}")
+        try:
+            conversation_data = fetch_conversation_data(tweet_id, headers)
+            replies = parse_conversation_replies(conversation_data)
+            post.replies = replies if replies else None
+            logger.info(f"Successfully fetched {len(replies) if replies else 0} replies")
+            
+            if save_raw_response_to_file and tweet_dir:
+                # Save raw conversation response
+                conversation_file = os.path.join(tweet_dir, "raw_conversation.json")
+                logger.debug(f"Saving raw conversation response to: {conversation_file}")
+                save_json(conversation_data, conversation_file)
+                print(f"Raw conversation response saved to: {conversation_file}")
+                
+        except Exception as e:
+            logger.warning(f"Failed to fetch replies for tweet {tweet_id}: {e}")
+            post.replies = None
 
     if save_raw_response_to_file and tweet_dir:
         # Save raw response
