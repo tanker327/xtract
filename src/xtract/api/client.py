@@ -193,6 +193,12 @@ def fetch_conversation_data(tweet_id: str, headers: Dict[str, str]) -> Dict[str,
             error_msg = f"Token expired or invalid (403 Forbidden) for conversation {tweet_id}: {response.text}"
             logger.warning(error_msg)
             raise TokenExpiredError(error_msg)
+        
+        # Check for 404 errors which typically indicate outdated GraphQL query hash
+        if response.status_code == 404:
+            error_msg = f"Conversation endpoint not found (404) for tweet {tweet_id}. The GraphQL query hash may be outdated."
+            logger.warning(error_msg)
+            raise APIError(error_msg)
             
         response.raise_for_status()
         logger.debug(f"Successfully received conversation response for tweet ID: {tweet_id}")
@@ -389,8 +395,17 @@ def download_x_post(
                 save_json(conversation_data, conversation_file)
                 print(f"Raw conversation response saved to: {conversation_file}")
                 
+        except APIError as e:
+            if "404" in str(e):
+                logger.warning(f"Cannot fetch replies for tweet {tweet_id}: GraphQL endpoint returned 404. This usually means the query hash is outdated.")
+                print(f"⚠️  Note: Could not fetch replies - the conversation endpoint may be temporarily unavailable or the GraphQL query hash needs updating.")
+            else:
+                logger.warning(f"Failed to fetch replies for tweet {tweet_id}: {e}")
+                print(f"⚠️  Note: Could not fetch replies due to API error: {e}")
+            post.replies = None
         except Exception as e:
-            logger.warning(f"Failed to fetch replies for tweet {tweet_id}: {e}")
+            logger.warning(f"Unexpected error fetching replies for tweet {tweet_id}: {e}")
+            print(f"⚠️  Note: Could not fetch replies due to unexpected error: {e}")
             post.replies = None
 
     if save_raw_response_to_file and tweet_dir:

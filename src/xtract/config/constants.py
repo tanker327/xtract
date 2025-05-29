@@ -33,6 +33,8 @@ DEFAULT_HEADERS = {
 # API endpoints
 GUEST_TOKEN_URL = "https://api.x.com/1.1/guest/activate.json"
 TWEET_DATA_URL = "https://api.x.com/graphql/_y7SZqeOFfgEivILXIy3tQ/TweetResultByRestId"
+# Note: The GraphQL query hash in CONVERSATION_URL may become outdated as X/Twitter rotates these hashes
+# If you get 404 errors when fetching replies, the hash "nBS-WpgA6ZG0CyNHD517JQ" may need updating
 CONVERSATION_URL = "https://api.x.com/graphql/nBS-WpgA6ZG0CyNHD517JQ/TweetDetail"
 
 # Default features for tweet request
