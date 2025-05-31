@@ -460,14 +460,12 @@ def download_x_post(
         # Save raw response for the main tweet
         raw_file = os.path.join(tweet_dir, "raw_response.json")
         logger.debug(f"Saving raw response to: {raw_file}")
-    save_json(data, raw_file) # 'data' contains the full response for the main tweet
-        print(f"Raw response saved to: {raw_file}")
+        save_json(data, raw_file) # 'data' contains the full response for the main tweet
 
-    # Save structured tweet data (now including replies)
+        # Save structured tweet data (now including replies)
         json_file = os.path.join(tweet_dir, "tweet.json")
         logger.debug(f"Saving structured JSON to: {json_file}")
-    save_json(main_post.to_dict(), json_file) # Use main_post here
-        print(f"Structured JSON saved to: {json_file}")
+        save_json(main_post.to_dict(), json_file) # Use main_post here
 
     logger.info(f"Successfully downloaded and processed tweet ID: {tweet_id} (Main Post ID: {main_post.tweet_id})")
     return main_post
