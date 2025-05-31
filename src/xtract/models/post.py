@@ -72,6 +72,7 @@ class Post:
     user_details: UserDetails
     post_data: PostData
     quoted_tweet: Optional["Post"] = None
+    replies: Optional[List["Post"]] = None
 
     @classmethod
     def from_api_data(
@@ -177,5 +178,9 @@ class Post:
         if self.quoted_tweet:
             logger.debug("Including quoted tweet in dictionary")
             result["quoted_tweet"] = self.quoted_tweet.to_dict()
+
+        if self.replies:
+            logger.debug(f"Including replies in dictionary for tweet ID: {self.tweet_id}")
+            result["replies"] = [reply.to_dict() for reply in self.replies]
 
         return result

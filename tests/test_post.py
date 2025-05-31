@@ -162,3 +162,135 @@ def test_post_with_quoted_tweet():
     assert post_dict["quoted_tweet"]["tweet_id"] == "987654321"
     assert post_dict["quoted_tweet"]["text"] == "This is a quoted post"
     assert len(post_dict["quoted_tweet"]["videos"]) == 1
+
+
+def test_post_with_replies():
+    """Test Post with replies and its to_dict serialization."""
+    # Arrange
+    # --- Reply Post Setup ---
+    user_details_reply = UserDetails(
+        id_str="user2",
+        name="Reply User",
+        screen_name="replyuser",
+        followers_count=50,
+        friends_count=50,
+        description="Bot reply account",
+        is_verified=False,
+        profile_image_url_https="https://example.com/reply_profile.jpg",
+        location="Internet",
+        created_at="Tue Jan 01 10:00:00 +0000 2023"
+    )
+    post_data_reply = PostData(
+        favorite_count=5,
+        retweet_count=2,
+        reply_count=0, # Replies usually don't have their own replies in this simple model
+        quote_count=0,
+        bookmark_count=1,
+        lang="en"
+    )
+    reply_post = Post(
+        tweet_id="1001",
+        username="replyuser",
+        created_at="Wed Mar 01 10:00:00 +0000 2023",
+        text="This is a reply.",
+        view_count="10",
+        images=[],
+        videos=[],
+        user_details=user_details_reply,
+        post_data=post_data_reply,
+        replies=None, # A reply itself wouldn't typically have its own replies list populated
+        quoted_tweet=None
+    )
+
+    # --- Main Post Setup ---
+    user_details_main = UserDetails(
+        id_str="user1",
+        name="Main User",
+        screen_name="mainuser",
+        followers_count=200,
+        friends_count=100,
+        description="Main test account",
+        is_verified=True,
+        profile_image_url_https="https://example.com/main_profile.jpg",
+        location="Testville",
+        created_at="Mon Feb 20 09:00:00 +0000 2023"
+    )
+    post_data_main = PostData(
+        favorite_count=20,
+        retweet_count=10,
+        reply_count=1, # Main post has one reply
+        quote_count=0,
+        bookmark_count=3,
+        lang="en"
+    )
+    main_post = Post(
+        tweet_id="1000",
+        username="mainuser",
+        created_at="Wed Mar 01 09:00:00 +0000 2023",
+        text="This is the main tweet.",
+        view_count="100",
+        images=[],
+        videos=[],
+        user_details=user_details_main,
+        post_data=post_data_main,
+        replies=[reply_post], # Assign the reply here
+        quoted_tweet=None
+    )
+
+    # Act
+    post_dict = main_post.to_dict()
+
+    # Assert
+    assert "replies" in post_dict
+    assert isinstance(post_dict["replies"], list)
+    assert len(post_dict["replies"]) == 1
+
+    reply_dict_in_main = post_dict["replies"][0]
+    assert reply_dict_in_main["tweet_id"] == "1001"
+    assert reply_dict_in_main["text"] == "This is a reply."
+    assert reply_dict_in_main["username"] == "replyuser"
+    assert "user_details" in reply_dict_in_main
+    assert reply_dict_in_main["user_details"]["screen_name"] == "replyuser"
+    assert "post_data" in reply_dict_in_main
+    assert reply_dict_in_main["post_data"]["favorite_count"] == 5
+
+
+def test_post_to_dict_no_replies():
+    """Test Post.to_dict() when there are no replies."""
+    # Arrange
+    user_details = UserDetails(
+        id_str="user3",
+        name="No Reply User",
+        screen_name="noreplyuser",
+        followers_count=10,
+        friends_count=5,
+        description="Test account with no replies",
+        is_verified=False,
+        profile_image_url_https="https://example.com/noreply_profile.jpg",
+        location="Nowhere",
+        created_at="Thu Mar 02 11:00:00 +0000 2023"
+    )
+    post_data = PostData(
+        favorite_count=2,
+        retweet_count=1,
+        reply_count=0,
+        lang="es"
+    )
+    post_no_replies = Post(
+        tweet_id="2000",
+        username="noreplyuser",
+        created_at="Thu Mar 02 12:00:00 +0000 2023",
+        text="A tweet with no replies.",
+        view_count="20",
+        images=[],
+        videos=[],
+        user_details=user_details,
+        post_data=post_data,
+        replies=None # Explicitly None, which is also the default
+    )
+
+    # Act
+    post_dict = post_no_replies.to_dict()
+
+    # Assert
+    assert "replies" not in post_dict # Key should not be present if replies is None or empty
