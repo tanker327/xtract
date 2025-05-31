@@ -1,11 +1,19 @@
 import os
 import pytest
 import requests
+import json # Added for params checking
 from unittest.mock import patch, MagicMock, call
 
-from xtract.api.client import get_guest_token, fetch_tweet_data, download_x_post, invalidate_guest_token
+from xtract.api.client import (
+    get_guest_token,
+    fetch_tweet_data,
+    download_x_post,
+    invalidate_guest_token,
+    fetch_tweet_replies # Added
+)
 from xtract.api.errors import APIError, TokenExpiredError
 from xtract.models.post import Post
+from xtract.config.constants import TWEET_DATA_URL, DEFAULT_FEATURES, DEFAULT_FIELD_TOGGLES # Added
 
 
 # Test-specific constants to keep tests isolated from production
@@ -474,3 +482,287 @@ def test_download_x_post_max_retries_exceeded(mock_get_token, mock_invalidate, m
     assert mock_get_token.call_count == 2  # Initial + 1 retry
     assert mock_invalidate.call_count == 1  # One invalidation after first failure
     assert mock_fetch.call_count == 2  # Two fetch attempts total
+
+
+# --- Mock Data for Reply Tests ---
+MOCK_PARENT_TWEET_ID = "12345"
+MOCK_REPLY_TWEET_ID_1 = "67890"
+MOCK_REPLY_TWEET_ID_2 = "54321"
+
+# Simplified raw reply tweet data structure
+def create_mock_raw_tweet_data(tweet_id, screen_name="testuser", text="A tweet"):
+    return {
+        "rest_id": tweet_id,
+        "legacy": {
+            "full_text": text,
+            "created_at": "Mon Jan 01 00:00:00 +0000 2024",
+            # ... other legacy fields ...
+        },
+        "core": {
+            "user_results": {
+                "result": {
+                    "legacy": {
+                        "screen_name": screen_name,
+                        "name": screen_name.capitalize() + " User",
+                        # ... other user legacy fields ...
+                    },
+                    "rest_id": "user_" + screen_name,
+                }
+            }
+        },
+        "views": {"count": "10"},
+        "note_tweet": {"note_tweet_results": {"result": {}}},
+        # ... other tweet fields ...
+    }
+
+MOCK_RAW_REPLY_1 = create_mock_raw_tweet_data(MOCK_REPLY_TWEET_ID_1, "replyuser1", "This is reply 1")
+MOCK_RAW_REPLY_2 = create_mock_raw_tweet_data(MOCK_REPLY_TWEET_ID_2, "replyuser2", "This is reply 2")
+MOCK_RAW_PARENT_TWEET_FOR_REPLIES_RESPONSE = create_mock_raw_tweet_data(MOCK_PARENT_TWEET_ID, "parentuser", "This is the parent tweet")
+
+
+# Mock API response for fetch_tweet_replies
+# This structure is based on the speculative parsing in fetch_tweet_replies
+MOCK_REPLIES_API_RESPONSE_SUCCESS = {
+    "data": {
+        "threaded_conversation_with_replies": {
+            "instructions": [
+                {
+                    "type": "TimelineAddEntries",
+                    "entries": [
+                        { # Entry for the parent tweet itself (should be filtered out)
+                            "entryId": f"tweet-{MOCK_PARENT_TWEET_ID}",
+                            "content": {
+                                "itemContent": {
+                                    "tweet_results": {"result": MOCK_RAW_PARENT_TWEET_FOR_REPLIES_RESPONSE}
+                                }
+                            }
+                        },
+                        { # Entry for the first reply
+                            "entryId": f"tweet-{MOCK_REPLY_TWEET_ID_1}",
+                            "content": {
+                                "itemContent": {
+                                    "tweet_results": {"result": MOCK_RAW_REPLY_1}
+                                }
+                            }
+                        },
+                        {"entryId": "cursor-bottom-0", "content": {}}, # Cursor
+                        { # Entry for the second reply
+                            "entryId": f"tweet-{MOCK_REPLY_TWEET_ID_2}",
+                            "content": {
+                                "itemContent": {
+                                    "tweet_results": {"result": MOCK_RAW_REPLY_2}
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
+
+MOCK_REPLIES_API_RESPONSE_NO_REPLIES = {
+    "data": {
+        "threaded_conversation_with_replies": {
+            "instructions": [
+                {
+                    "type": "TimelineAddEntries",
+                    "entries": [
+                         { # Entry for the parent tweet itself
+                            "entryId": f"tweet-{MOCK_PARENT_TWEET_ID}",
+                            "content": {
+                                "itemContent": {
+                                    "tweet_results": {"result": MOCK_RAW_PARENT_TWEET_FOR_REPLIES_RESPONSE}
+                                }
+                            }
+                        },
+                        {"entryId": "cursor-bottom-0", "content": {}} # Only cursor
+                    ]
+                }
+            ]
+        }
+    }
+}
+
+# --- Tests for fetch_tweet_replies ---
+
+@patch("xtract.api.client.requests.get")
+def test_fetch_tweet_replies_success(mock_get):
+    # Arrange
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = MOCK_REPLIES_API_RESPONSE_SUCCESS
+    mock_get.return_value = mock_response
+
+    expected_variables = {
+        "focalTweetId": MOCK_PARENT_TWEET_ID,
+        "withReplies": True,
+        "withCommunity": False,
+        "includePromotedContent": False,
+        "withVoice": False,
+    }
+    expected_params = {
+        "variables": json.dumps(expected_variables),
+        "features": json.dumps(DEFAULT_FEATURES),
+        "fieldToggles": json.dumps(DEFAULT_FIELD_TOGGLES),
+    }
+    headers = {"Authorization": "bearer FAKETOKEN", "x-guest-token": "dummyguest"}
+
+    # Act
+    replies = fetch_tweet_replies(MOCK_PARENT_TWEET_ID, headers)
+
+    # Assert
+    mock_get.assert_called_once_with(TWEET_DATA_URL, headers=headers, params=expected_params)
+    mock_response.json.assert_called_once()
+    assert len(replies) == 2
+    assert replies[0]["rest_id"] == MOCK_REPLY_TWEET_ID_1
+    assert replies[1]["rest_id"] == MOCK_REPLY_TWEET_ID_2
+    assert MOCK_PARENT_TWEET_ID not in [r["rest_id"] for r in replies]
+
+
+@patch("xtract.api.client.requests.get")
+def test_fetch_tweet_replies_no_replies_found(mock_get):
+    # Arrange
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = MOCK_REPLIES_API_RESPONSE_NO_REPLIES
+    mock_get.return_value = mock_response
+    headers = {"Authorization": "bearer FAKETOKEN"}
+
+    # Act
+    replies = fetch_tweet_replies(MOCK_PARENT_TWEET_ID, headers)
+
+    # Assert
+    assert replies == []
+
+
+@patch("xtract.api.client.requests.get")
+def test_fetch_tweet_replies_api_error(mock_get):
+    # Arrange
+    mock_get.side_effect = requests.exceptions.HTTPError("Server error")
+    headers = {"Authorization": "bearer FAKETOKEN"}
+
+    # Act & Assert
+    with pytest.raises(APIError):
+        fetch_tweet_replies(MOCK_PARENT_TWEET_ID, headers)
+
+
+@patch("xtract.api.client.requests.get")
+def test_fetch_tweet_replies_token_expired(mock_get):
+    # Arrange
+    mock_response = MagicMock()
+    mock_response.status_code = 403
+    mock_response.text = "Forbidden - token expired"
+    mock_get.return_value = mock_response
+    headers = {"Authorization": "bearer FAKETOKEN"}
+
+    # Act & Assert
+    with pytest.raises(TokenExpiredError):
+        fetch_tweet_replies(MOCK_PARENT_TWEET_ID, headers)
+
+# --- Tests for download_x_post (with replies) ---
+
+# Mock data for the main tweet as returned by fetch_tweet_data
+MOCK_MAIN_TWEET_API_DATA = {
+    "data": {
+        "tweetResult": {
+            "result": create_mock_raw_tweet_data(MOCK_PARENT_TWEET_ID, "parentuser", "This is the parent tweet for download_x_post")
+        }
+    }
+}
+
+@patch("xtract.api.client.get_guest_token")
+@patch("xtract.api.client.requests.get")
+def test_download_x_post_with_replies(mock_requests_get, mock_get_guest_token):
+    # Arrange
+    mock_get_guest_token.return_value = "dummy_guest_token"
+
+    mock_response_main_tweet = MagicMock()
+    mock_response_main_tweet.status_code = 200
+    mock_response_main_tweet.json.return_value = MOCK_MAIN_TWEET_API_DATA
+
+    mock_response_replies = MagicMock()
+    mock_response_replies.status_code = 200
+    mock_response_replies.json.return_value = MOCK_REPLIES_API_RESPONSE_SUCCESS
+
+    mock_requests_get.side_effect = [mock_response_main_tweet, mock_response_replies]
+
+    # Act
+    main_post_obj = download_x_post(MOCK_PARENT_TWEET_ID)
+
+    # Assert
+    mock_get_guest_token.assert_called_once()
+    assert mock_requests_get.call_count == 2
+
+    # Check call for main tweet
+    call_main_args = mock_requests_get.call_args_list[0]
+    expected_main_vars = {"tweetId": MOCK_PARENT_TWEET_ID, "withCommunity": False, "includePromotedContent": False, "withVoice": False}
+    assert json.loads(call_main_args[1]['params']['variables']) == expected_main_vars
+
+    # Check call for replies
+    call_replies_args = mock_requests_get.call_args_list[1]
+    expected_replies_vars = {"focalTweetId": MOCK_PARENT_TWEET_ID, "withReplies": True, "withCommunity": False, "includePromotedContent": False, "withVoice": False}
+    assert json.loads(call_replies_args[1]['params']['variables']) == expected_replies_vars
+
+    assert main_post_obj is not None
+    assert isinstance(main_post_obj, Post)
+    assert main_post_obj.tweet_id == MOCK_PARENT_TWEET_ID
+    assert main_post_obj.username == "parentuser" # From create_mock_raw_tweet_data
+
+    assert main_post_obj.replies is not None
+    assert isinstance(main_post_obj.replies, list)
+    assert len(main_post_obj.replies) == 2
+    assert main_post_obj.replies[0].tweet_id == MOCK_REPLY_TWEET_ID_1
+    assert main_post_obj.replies[0].username == "replyuser1"
+    assert main_post_obj.replies[1].tweet_id == MOCK_REPLY_TWEET_ID_2
+    assert main_post_obj.replies[1].username == "replyuser2"
+
+
+@patch("xtract.api.client.get_guest_token")
+@patch("xtract.api.client.requests.get")
+def test_download_x_post_main_fails_before_replies(mock_requests_get, mock_get_guest_token):
+    # Arrange
+    mock_get_guest_token.return_value = "dummy_guest_token"
+    mock_requests_get.side_effect = APIError("Failed to fetch main tweet") # Fail on first call
+
+    # Act
+    main_post_obj = download_x_post(MOCK_PARENT_TWEET_ID)
+
+    # Assert
+    assert main_post_obj is None
+    mock_get_guest_token.assert_called_once()
+    mock_requests_get.assert_called_once() # Should only be called for the main tweet
+
+
+@patch("xtract.api.client.get_guest_token")
+@patch("xtract.api.client.requests.get")
+def test_download_x_post_replies_fail(mock_requests_get, mock_get_guest_token, caplog):
+    # Arrange
+    mock_get_guest_token.return_value = "dummy_guest_token"
+
+    mock_response_main_tweet = MagicMock()
+    mock_response_main_tweet.status_code = 200
+    mock_response_main_tweet.json.return_value = MOCK_MAIN_TWEET_API_DATA
+
+    # Let the second call (for replies) raise an error
+    mock_requests_get.side_effect = [
+        mock_response_main_tweet,
+        APIError("Failed to fetch replies")
+    ]
+
+    # Act
+    main_post_obj = download_x_post(MOCK_PARENT_TWEET_ID)
+
+    # Assert
+    assert main_post_obj is not None
+    assert isinstance(main_post_obj, Post)
+    assert main_post_obj.tweet_id == MOCK_PARENT_TWEET_ID
+    assert main_post_obj.username == "parentuser"
+
+    assert main_post_obj.replies is None # Or [] depending on how Post model initializes, current Post model defaults to None
+
+    assert mock_requests_get.call_count == 2 # Called for main and then for replies
+
+    # Check logs for warning about replies
+    assert f"Could not fetch replies for tweet ID {MOCK_PARENT_TWEET_ID}" in caplog.text
+    assert "Continuing without replies." in caplog.text
