@@ -66,16 +66,17 @@ def post_to_markdown(
             "downloaded_by": "xtract",
         }
 
+        # Add quoted tweet ID if present (even if we don't have full data)
+        if post.quoted_tweet_id:
+            logger.debug(f"Including quoted tweet ID in metadata: {post.quoted_tweet_id}")
+            metadata["quoted_tweet_id"] = post.quoted_tweet_id
+
+        # Add additional quoted tweet metadata if we have full data
         if post.quoted_tweet:
             logger.debug(
-                f"Including quoted tweet metadata for tweet ID: {post.quoted_tweet.tweet_id}"
+                f"Including full quoted tweet metadata for tweet ID: {post.quoted_tweet.tweet_id}"
             )
-            metadata.update(
-                {
-                    "quoted_tweet_id": post.quoted_tweet.tweet_id,
-                    "quoted_tweet_author": post.quoted_tweet.username,
-                }
-            )
+            metadata["quoted_tweet_author"] = post.quoted_tweet.username
 
     # Start with the post header - user info and timestamp
     verification_badge = "✓" if post.user_details.is_verified else ""

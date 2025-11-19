@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="xtract",
-    version="0.1.0",
+    version="1.3.0",
     author="Eric Wu",
     author_email="your.email@example.com",
     description="A library for extracting data from X (formerly Twitter) posts",

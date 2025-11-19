@@ -159,3 +159,242 @@ def test_no_quoted_tweet():
 
     # Assert that the quoted tweet is not included in the dictionary
     assert "quoted_tweet" not in post_dict
+
+
+def test_quoted_tweet_id_field():
+    """Test that quoted_tweet_id is set when a tweet has a quoted tweet."""
+    # Create a mock response with a quoted tweet
+    tweet_data = {
+        "rest_id": "123456",
+        "views": {"count": "1000"},
+        "source": "Twitter for iPhone",
+        "is_translatable": False,
+        "grok_analysis_button": True,
+        "quoted_status_result": {
+            "result": {
+                "rest_id": "789012",
+                "views": {"count": "500"},
+                "source": "Twitter Web App",
+                "legacy": {
+                    "created_at": "Fri Feb 28 20:00:00 +0000 2025",
+                    "full_text": "This is the quoted tweet",
+                    "favorite_count": 50,
+                    "retweet_count": 25,
+                },
+                "core": {
+                    "user_results": {
+                        "result": {"legacy": {"screen_name": "quoteduser", "name": "Quoted User"}}
+                    }
+                },
+            }
+        },
+    }
+
+    legacy = {
+        "created_at": "Fri Feb 28 20:35:10 +0000 2025",
+        "full_text": "This is a test tweet",
+        "is_quote_status": True,
+        "favorite_count": 100,
+        "retweet_count": 50,
+        "quoted_status_id_str": "789012",
+    }
+
+    user = {"screen_name": "testuser", "name": "Test User"}
+    note_tweet = {}
+
+    # Create a Post object
+    post = Post.from_api_data(tweet_data, legacy, user, note_tweet)
+
+    # Assert that quoted_tweet_id is set
+    assert post.quoted_tweet_id == "789012"
+
+    # Also verify in dictionary output
+    post_dict = post.to_dict()
+    assert "quoted_tweet_id" in post_dict
+    assert post_dict["quoted_tweet_id"] == "789012"
+
+
+def test_quoted_tweet_id_only():
+    """Test handling when we only have quoted_tweet_id but no full quoted tweet data."""
+    # Create a mock response with only the ID (no full data)
+    tweet_data = {
+        "rest_id": "123456",
+        "views": {"count": "1000"},
+        "source": "Twitter for iPhone",
+        "is_translatable": False,
+        "grok_analysis_button": True,
+        "quoted_status_result": {
+            "result": {
+                "rest_id": "789012",
+                # No legacy data - only ID
+            }
+        },
+    }
+
+    legacy = {
+        "created_at": "Fri Feb 28 20:35:10 +0000 2025",
+        "full_text": "This is a test tweet",
+        "is_quote_status": True,
+        "favorite_count": 100,
+        "retweet_count": 50,
+        "quoted_status_id_str": "789012",
+    }
+
+    user = {"screen_name": "testuser", "name": "Test User"}
+    note_tweet = {}
+
+    # Create a Post object
+    post = Post.from_api_data(tweet_data, legacy, user, note_tweet)
+
+    # Should have the ID but no full quoted tweet
+    assert post.quoted_tweet_id == "789012"
+    assert post.quoted_tweet is None
+
+    # Verify in dictionary output
+    post_dict = post.to_dict()
+    assert "quoted_tweet_id" in post_dict
+    assert post_dict["quoted_tweet_id"] == "789012"
+    assert "quoted_tweet" not in post_dict
+
+
+def test_nested_quoted_tweet():
+    """Test that nested quoted tweets are properly structured."""
+    # Create a mock response with a nested quoted tweet (tweet quoting a tweet that quotes another)
+    tweet_data = {
+        "rest_id": "111111",
+        "views": {"count": "3000"},
+        "source": "Twitter for iPhone",
+        "is_translatable": False,
+        "grok_analysis_button": True,
+        "quoted_status_result": {
+            "result": {
+                "rest_id": "222222",
+                "views": {"count": "2000"},
+                "source": "Twitter Web App",
+                "legacy": {
+                    "created_at": "Fri Feb 28 20:00:00 +0000 2025",
+                    "full_text": "This is level 1 quoted tweet",
+                    "favorite_count": 50,
+                    "retweet_count": 25,
+                    "is_quote_status": True,
+                    "quoted_status_id_str": "333333",
+                },
+                "core": {
+                    "user_results": {
+                        "result": {"legacy": {"screen_name": "user2", "name": "User 2"}}
+                    }
+                },
+                "quoted_status_result": {
+                    "result": {
+                        "rest_id": "333333",
+                        "views": {"count": "1000"},
+                        "source": "Twitter Web App",
+                        "legacy": {
+                            "created_at": "Fri Feb 28 19:00:00 +0000 2025",
+                            "full_text": "This is level 2 quoted tweet",
+                            "favorite_count": 25,
+                            "retweet_count": 10,
+                        },
+                        "core": {
+                            "user_results": {
+                                "result": {"legacy": {"screen_name": "user3", "name": "User 3"}}
+                            }
+                        },
+                    }
+                },
+            }
+        },
+    }
+
+    legacy = {
+        "created_at": "Fri Feb 28 21:00:00 +0000 2025",
+        "full_text": "This is the main tweet",
+        "is_quote_status": True,
+        "favorite_count": 100,
+        "retweet_count": 50,
+        "quoted_status_id_str": "222222",
+    }
+
+    user = {"screen_name": "user1", "name": "User 1"}
+    note_tweet = {}
+
+    # Create a Post object
+    post = Post.from_api_data(tweet_data, legacy, user, note_tweet)
+
+    # Verify the nested structure
+    assert post.tweet_id == "111111"
+    assert post.quoted_tweet_id == "222222"
+    assert post.quoted_tweet is not None
+
+    # Level 1 quoted tweet
+    level1 = post.quoted_tweet
+    assert level1.tweet_id == "222222"
+    assert level1.quoted_tweet_id == "333333"
+    assert level1.quoted_tweet is not None
+
+    # Level 2 quoted tweet
+    level2 = level1.quoted_tweet
+    assert level2.tweet_id == "333333"
+    assert level2.username == "user3"
+
+    # Verify in dictionary output
+    post_dict = post.to_dict()
+    assert post_dict["quoted_tweet_id"] == "222222"
+    assert post_dict["quoted_tweet"]["quoted_tweet_id"] == "333333"
+    assert post_dict["quoted_tweet"]["quoted_tweet"]["tweet_id"] == "333333"
+
+
+def test_quotedRefResult_detection():
+    """Test that quotedRefResult (used for nested quotes) is detected."""
+    # Create a mock response where level 1 has quotedRefResult pointing to level 2
+    tweet_data = {
+        "rest_id": "111111",
+        "views": {"count": "3000"},
+        "source": "Twitter for iPhone",
+        "is_translatable": False,
+        "grok_analysis_button": True,
+        "quoted_status_result": {
+            "result": {
+                "rest_id": "222222",
+                "views": {"count": "2000"},
+                "source": "Twitter Web App",
+                "legacy": {
+                    "created_at": "Fri Feb 28 20:00:00 +0000 2025",
+                    "full_text": "This is level 1",
+                    "favorite_count": 50,
+                    "retweet_count": 25,
+                    "is_quote_status": True,
+                    "quoted_status_id_str": "333333",
+                },
+                "core": {
+                    "user_results": {
+                        "result": {"legacy": {"screen_name": "user2", "name": "User 2"}}
+                    }
+                },
+                # This is the quotedRefResult (with only ID)
+                "quotedRefResult": {"result": {"rest_id": "333333"}},
+            }
+        },
+    }
+
+    legacy = {
+        "created_at": "Fri Feb 28 21:00:00 +0000 2025",
+        "full_text": "This is the main tweet",
+        "is_quote_status": True,
+        "favorite_count": 100,
+        "retweet_count": 50,
+        "quoted_status_id_str": "222222",
+    }
+
+    user = {"screen_name": "user1", "name": "User 1"}
+    note_tweet = {}
+
+    # Create a Post object
+    post = Post.from_api_data(tweet_data, legacy, user, note_tweet)
+
+    # Level 1 should have the quoted_tweet_id even though only ID was provided
+    level1 = post.quoted_tweet
+    assert level1 is not None
+    assert level1.quoted_tweet_id == "333333"
+    # But should not have the full quoted_tweet since only ID was in quotedRefResult
+    # (This would be fetched by recursive fetching in the real implementation)

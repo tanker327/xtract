@@ -59,6 +59,7 @@ def test_post_to_markdown_with_quoted_tweet(sample_post):
 
     # Set the quoted tweet
     sample_post.quoted_tweet = quoted_post
+    sample_post.quoted_tweet_id = quoted_post.tweet_id  # Set the quoted_tweet_id field
 
     # Patch post_to_markdown for the quoted tweet to avoid recursion issues with the mock
     with patch(
