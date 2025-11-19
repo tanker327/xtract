@@ -15,10 +15,14 @@ from xtract.utils.markdown import save_post_as_markdown
 # Create a logger for this module
 logger = get_logger(__name__)
 
+
 def main():
     """Main entry point for the CLI."""
     parser = argparse.ArgumentParser(description="Download content from X posts")
-    parser.add_argument("tweet_id", help="X post ID or URL (e.g., 1892413385804792307 or https://x.com/username/status/1892413385804792307)")
+    parser.add_argument(
+        "tweet_id",
+        help="X post ID or URL (e.g., 1892413385804792307 or https://x.com/username/status/1892413385804792307)",
+    )
     parser.add_argument(
         "--output-dir", default="x_post_downloads", help="Directory to save downloaded content"
     )
@@ -30,19 +34,28 @@ def main():
         "--pretty", action="store_true", default=False, help="Pretty-print JSON output to console"
     )
     parser.add_argument(
-        "--markdown", action="store_true", default=False, help="Generate a Markdown file of the post"
+        "--markdown",
+        action="store_true",
+        default=False,
+        help="Generate a Markdown file of the post",
     )
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Enable verbose logging output"
     )
+    parser.add_argument(
+        "--no-recursive-quotes",
+        action="store_true",
+        default=False,
+        help="Disable recursive fetching of quoted tweets (default: enabled)",
+    )
 
     args = parser.parse_args()
-    
+
     # Configure logging based on verbosity
     if args.verbose:
         configure_logging(level=logging.DEBUG)
         logger.debug("Verbose logging enabled")
-    
+
     logger.info("Starting xtract CLI")
 
     # Check if input is a URL or ID
@@ -57,25 +70,26 @@ def main():
 
     logger.info(f"Downloading content for tweet: {args.tweet_id}")
     print(f"Downloading content for tweet: {args.tweet_id}")
-    
+
     try:
         post = download_x_post(
             args.tweet_id,
             output_dir=args.output_dir,
             cookies=args.cookies,
             save_raw_response_to_file=args.save_raw,
+            fetch_quoted_tweets=not args.no_recursive_quotes,
         )
 
         if post:
             logger.info(f"Successfully downloaded content for tweet ID: {post.tweet_id}")
-            
+
             if args.pretty:
                 logger.debug("Pretty-printing JSON output")
                 print("\nResulting JSON:")
                 print(json.dumps(post.to_dict(), indent=2))
             else:
                 print("Download completed successfully!")
-                
+
             # Generate Markdown if requested
             if args.markdown:
                 logger.info("Generating Markdown summary")
@@ -92,7 +106,7 @@ def main():
         logger.exception(f"Error during download: {str(e)}")
         print(f"Error: {str(e)}")
         sys.exit(1)
-        
+
     logger.info("CLI execution completed successfully")
 
 
