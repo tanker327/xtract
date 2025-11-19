@@ -22,7 +22,7 @@ def save_json(data: Any, filepath: str) -> None:
     """
     logger.debug(f"Saving JSON data to {filepath}")
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
     logger.debug(f"Successfully saved JSON data to {filepath}")
 
 
