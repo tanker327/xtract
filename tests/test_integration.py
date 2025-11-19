@@ -2,7 +2,7 @@ import os
 import pytest
 import tempfile
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from xtract import download_x_post
 from xtract.models.post import Post

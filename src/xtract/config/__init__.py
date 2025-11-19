@@ -2,7 +2,6 @@
 Configuration module for the xtract library.
 """
 
-import logging
 from xtract.config.logging import get_logger
 from xtract.config.constants import (
     BEARER_TOKEN,

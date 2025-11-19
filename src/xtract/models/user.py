@@ -3,7 +3,6 @@ Models for user data from X posts.
 """
 
 from dataclasses import dataclass
-import logging
 from typing import Dict, Any
 
 from xtract.config.logging import get_logger

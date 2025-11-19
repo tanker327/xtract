@@ -36,8 +36,8 @@ def main():
             print(f"Quoted view count: {post.quoted_tweet.view_count}")
             print(f"Quoted images: {len(post.quoted_tweet.images)}")
             print(f"Quoted videos: {len(post.quoted_tweet.videos)}")
-            
-        print("\n\n")    
+
+        print("\n\n")
         metadata, markdown = post_to_markdown(post)
         print("Metadata:")
         for key, value in metadata.items():

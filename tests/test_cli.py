@@ -59,6 +59,8 @@ def test_cli_basic(mock_args, mock_download, mock_post):
     mock_args.return_value.markdown = False  # Add the new markdown option
 
     # Setup mock download function
+    mock_args.return_value.no_recursive_quotes = False
+    mock_args.return_value.verbose = False
     mock_download.return_value = mock_post
 
     # Run the CLI
@@ -67,7 +69,8 @@ def test_cli_basic(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the correct parameters
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=False
+        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=False,
+        fetch_quoted_tweets=True,
     )
 
 
@@ -85,6 +88,8 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
         mock_args.return_value.markdown = False  # Add the new markdown option
 
         # Setup mock download function
+        mock_args.return_value.no_recursive_quotes = False
+        mock_args.return_value.verbose = False
         mock_download.return_value = mock_post
 
         # Run the CLI
@@ -93,7 +98,11 @@ def test_cli_custom_output_dir(mock_args, mock_download, mock_post):
 
         # Verify the download function was called with the correct output dir
         mock_download.assert_called_once_with(
-            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
+            "123456789",
+            output_dir=temp_dir,
+            cookies=None,
+            save_raw_response_to_file=False,
+            fetch_quoted_tweets=True,
         )
 
 
@@ -110,6 +119,8 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
     mock_args.return_value.markdown = False  # Add the new markdown option
 
     # Setup mock download function
+    mock_args.return_value.no_recursive_quotes = False
+    mock_args.return_value.verbose = False
     mock_download.return_value = mock_post
 
     # Run the CLI
@@ -122,6 +133,7 @@ def test_cli_with_cookies(mock_args, mock_download, mock_post):
         output_dir="x_post_downloads",
         cookies="auth_token=abc; ct0=123",
         save_raw_response_to_file=False,
+        fetch_quoted_tweets=True,
     )
 
 
@@ -160,6 +172,8 @@ def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
     mock_args.return_value.markdown = False  # Add the new markdown option
 
     # Setup mock download function
+    mock_args.return_value.no_recursive_quotes = False
+    mock_args.return_value.verbose = False
     mock_download.return_value = mock_post
 
     # Run the CLI
@@ -168,7 +182,8 @@ def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with save_raw_response_to_file=True
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=True
+        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=True,
+        fetch_quoted_tweets=True,
     )
 
 
@@ -187,10 +202,14 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
         mock_args.return_value.markdown = True
 
         # Setup mock download function
+        mock_args.return_value.no_recursive_quotes = False
+        mock_args.return_value.verbose = False
         mock_download.return_value = mock_post
-        
+
         # Setup mock save_post_as_markdown function
-        mock_save_markdown.return_value = os.path.join(temp_dir, "x_post_123456789", "tweet_123456789.md")
+        mock_save_markdown.return_value = os.path.join(
+            temp_dir, "x_post_123456789", "tweet_123456789.md"
+        )
 
         # Run the CLI
         with patch("sys.stdout"):  # Suppress output
@@ -198,9 +217,13 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
 
         # Verify the download function was called with correct parameters
         mock_download.assert_called_once_with(
-            "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
+            "123456789",
+            output_dir=temp_dir,
+            cookies=None,
+            save_raw_response_to_file=False,
+            fetch_quoted_tweets=True,
         )
-        
+
         # Verify the save_post_as_markdown function was called with correct parameters
         expected_tweet_dir = os.path.join(temp_dir, "x_post_123456789")
         mock_save_markdown.assert_called_once_with(mock_post, output_dir=expected_tweet_dir)

@@ -1,7 +1,5 @@
 import os
-import pytest
 import tempfile
-import json
 from unittest.mock import patch, mock_open
 
 from xtract.utils.file import ensure_directory, save_json

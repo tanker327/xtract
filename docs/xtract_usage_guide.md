@@ -110,6 +110,7 @@ def download_x_post(
     output_dir: str = None,
     cookies: str = None,
     save_raw_response_to_file: bool = False,
+    fetch_quoted_tweets: bool = True,
     token_cache_dir: str = "/tmp/xtract/",
     token_cache_filename: str = "guest_token.json",
     max_retries: int = 3,
@@ -122,6 +123,7 @@ def download_x_post(
 | `output_dir` | `str` | `None` (current directory) | Directory where files will be saved when `save_raw_response_to_file=True` |
 | `cookies` | `str` | `None` | Optional cookies for authentication. If not provided, uses guest token authentication |
 | `save_raw_response_to_file` | `bool` | `False` | Whether to save raw API response and structured JSON to files |
+| `fetch_quoted_tweets` | `bool` | `True` | Whether to recursively fetch complete data for quoted tweets (up to 5 levels deep) |
 | `token_cache_dir` | `str` | `"/tmp/xtract/"` | Directory to cache guest tokens |
 | `token_cache_filename` | `str` | `"guest_token.json"` | Filename for the cached token |
 | `max_retries` | `int` | `3` | Maximum number of retries when token expires (use `0` to disable retries) |
@@ -209,6 +211,7 @@ post.post_data.is_quote_status      # bool: Whether this is a quote tweet
 
 # Quoted tweet (if present)
 post.quoted_tweet       # Post object or None
+post.quoted_tweet_id    # str or None: ID of the quoted tweet (always present if quote exists)
 ```
 
 ### Complete Output Example
@@ -267,13 +270,18 @@ post_dict = post.to_dict()
         "grok_analysis_button": false
     },
 
-    # If the post quotes another tweet, it appears here
+    # ID of quoted tweet (always present if post quotes another tweet)
+    "quoted_tweet_id": "1234567890123456789",
+
+    # If the post quotes another tweet, it appears here with full data
     "quoted_tweet": {
         "tweet_id": "1234567890123456789",
         "username": "quoteduser",
         "text": "This is the quoted tweet...",
         "images": [...],
         "videos": [...],
+        "quoted_tweet_id": "9876543210987654321",  // If this tweet also quotes another
+        "quoted_tweet": {...}  // Nested quoted tweets are recursively fetched
         // ... (same structure as parent post)
     }
 }
@@ -368,7 +376,35 @@ if post.quoted_tweet:
 
 ## Quoted Tweets
 
-Posts can quote (reference) other tweets. When this happens, the quoted tweet is included in the output.
+Posts can quote (reference) other tweets. When this happens, the quoted tweet is included in the output. **The library automatically fetches complete data for quoted tweets recursively**, up to 5 levels deep.
+
+### Recursive Quoted Tweet Fetching
+
+By default, the library automatically fetches complete data for all quoted tweets in a chain:
+
+```python
+from xtract import download_x_post
+
+# Automatically fetches complete quote chains (default behavior)
+post = download_x_post("1991118290920567243")
+
+# Main tweet quotes Level 1
+# Level 1 quotes Level 2
+# Level 2 quotes Level 3... (up to 5 levels)
+
+# Access the complete chain
+if post.quoted_tweet:
+    print(f"Level 1: @{post.quoted_tweet.username}")
+
+    if post.quoted_tweet.quoted_tweet:
+        print(f"Level 2: @{post.quoted_tweet.quoted_tweet.username}")
+
+        if post.quoted_tweet.quoted_tweet.quoted_tweet:
+            print(f"Level 3: @{post.quoted_tweet.quoted_tweet.quoted_tweet.username}")
+
+# Disable recursive fetching if you only want the first level
+post = download_x_post("1991118290920567243", fetch_quoted_tweets=False)
+```
 
 ### Checking for Quoted Tweets
 
@@ -383,7 +419,11 @@ if post.quoted_tweet:
     print(f"Quoted tweet by: @{post.quoted_tweet.username}")
     print(f"Quoted tweet text: {post.quoted_tweet.text}")
 
-# Method 2: Check using post_data
+# Method 2: Check using quoted_tweet_id
+if post.quoted_tweet_id:
+    print(f"This post quotes tweet ID: {post.quoted_tweet_id}")
+
+# Method 3: Check using post_data
 if post.post_data.is_quote_status:
     print("This is a quote tweet")
 ```
@@ -440,6 +480,65 @@ if post.quoted_tweet:
     print(f"Text: {post.quoted_tweet.text}")
     print(f"Images: {len(post.quoted_tweet.images)}")
     print(f"Videos: {len(post.quoted_tweet.videos)}")
+```
+
+### Working with Nested Quoted Tweets
+
+The library recursively fetches quoted tweets up to 5 levels deep. This means if Tweet A quotes Tweet B, and Tweet B quotes Tweet C, all three tweets will be fully downloaded:
+
+```python
+from xtract import download_x_post
+
+# This tweet has a nested quote chain
+post = download_x_post("1991118290920567243")
+
+def print_quote_chain(post, level=0):
+    """Recursively print all quoted tweets in the chain."""
+    indent = "  " * level
+    print(f"{indent}Level {level}: @{post.username} ({post.tweet_id})")
+    print(f"{indent}Text: {post.text[:80]}...")
+
+    if post.quoted_tweet:
+        print_quote_chain(post.quoted_tweet, level + 1)
+
+# Print the entire quote chain
+print_quote_chain(post)
+
+# Output:
+# Level 0: @JasonZX (1991118290920567243)
+# Text: 我用xAI最新模型Grok4.1测试了一下今天这张在白宫的四人合影...
+#   Level 1: @JasonZX (1991006283147981088)
+#   Text: 所有人的关注点都在马斯克的鞋上。...
+#     Level 2: @DavidSacks (1990992213132693627)
+#     Text: AI Diplomacy...
+```
+
+### Controlling Recursive Fetching
+
+You can control the recursive fetching behavior:
+
+```python
+from xtract import download_x_post
+
+# Default: Recursively fetch all quoted tweets (up to 5 levels)
+post = download_x_post("1991118290920567243")
+
+# Disable recursive fetching: Only get first-level quoted tweet data from initial API call
+# (Note: Second-level quotes will only have ID, not full data)
+post = download_x_post("1991118290920567243", fetch_quoted_tweets=False)
+
+# Check what you got
+print(f"Main tweet ID: {post.tweet_id}")
+print(f"Quoted tweet ID: {post.quoted_tweet_id}")
+
+if post.quoted_tweet:
+    print(f"Level 1 has full data: Yes")
+    print(f"Level 1 quoted tweet ID: {post.quoted_tweet.quoted_tweet_id}")
+
+    if post.quoted_tweet.quoted_tweet:
+        print(f"Level 2 has full data: Yes (recursive fetch worked)")
+    else:
+        print(f"Level 2 has full data: No (only ID available)")
 ```
 
 ## Markdown Generation
@@ -739,9 +838,15 @@ if post:
    - `raw_response.json` - Raw API response
    - `tweet.json` - Structured data
 
-4. **Quoted Tweets**: Have the same structure as main posts and are fully accessible through `post.quoted_tweet`
+4. **Quoted Tweets**:
+   - Automatically fetched recursively (up to 5 levels deep)
+   - Have the same structure as main posts
+   - Accessible through `post.quoted_tweet`
+   - Each post includes `quoted_tweet_id` field
 
-5. **Token Management**: Automatic with configurable retry logic (default: 3 retries)
+5. **Recursive Quote Fetching**: Enabled by default, can be disabled with `fetch_quoted_tweets=False`
+
+6. **Token Management**: Automatic with configurable retry logic (default: 3 retries)
 
 ### Quick Reference
 
@@ -757,6 +862,7 @@ post.text                          # Post content
 post.images                        # List of image URLs
 post.videos                        # List of video URLs
 post.quoted_tweet                  # Quoted post (or None)
+post.quoted_tweet_id               # Quoted tweet ID (or None)
 post.user_details.name             # Author name
 post.post_data.favorite_count      # Likes
 
