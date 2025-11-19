@@ -95,6 +95,7 @@ class Post:
             Post: Populated instance
         """
         from xtract.utils.media import extract_media_urls
+        from xtract.utils.text import expand_urls
 
         logger.debug(f"Creating Post from API data for tweet ID: {tweet.get('rest_id', 'unknown')}")
 
@@ -109,9 +110,24 @@ class Post:
 
         # Check for note tweet (longer form content)
         text = legacy.get("full_text", "")
+        url_entities = legacy.get("entities", {}).get("urls", [])
+
         if note_tweet.get("text"):
             logger.debug("Using text from note_tweet (longer form content)")
             text = note_tweet.get("text", "")
+            # Use URL entities from note_tweet entity_set if available
+            note_urls = note_tweet.get("entity_set", {}).get("urls", [])
+            if note_urls:
+                logger.debug("Using URL entities from note_tweet entity_set")
+                url_entities = note_urls
+
+        # Expand t.co URLs to their original form
+        try:
+            if url_entities:
+                logger.debug(f"Found {len(url_entities)} URL entities to expand")
+                text = expand_urls(text, url_entities)
+        except Exception as e:
+            logger.warning(f"Failed to expand URLs for tweet {tweet.get('rest_id')}: {e}")
 
         post = cls(
             tweet_id=tweet.get("rest_id", ""),

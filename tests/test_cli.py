@@ -69,7 +69,10 @@ def test_cli_basic(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with the correct parameters
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=False,
+        "123456789",
+        output_dir="x_post_downloads",
+        cookies=None,
+        save_raw_response_to_file=False,
         fetch_quoted_tweets=True,
     )
 
@@ -182,7 +185,10 @@ def test_cli_save_raw_response_to_file(mock_args, mock_download, mock_post):
 
     # Verify the download function was called with save_raw_response_to_file=True
     mock_download.assert_called_once_with(
-        "123456789", output_dir="x_post_downloads", cookies=None, save_raw_response_to_file=True,
+        "123456789",
+        output_dir="x_post_downloads",
+        cookies=None,
+        save_raw_response_to_file=True,
         fetch_quoted_tweets=True,
     )
 
