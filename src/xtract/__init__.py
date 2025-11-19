@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 logger.debug("xtract package initialized")
 
 __all__ = [
-    "download_x_post", 
-    "Post", 
-    "PostData", 
-    "UserDetails", 
-    "post_to_markdown", 
-    "save_post_as_markdown"
+    "download_x_post",
+    "Post",
+    "PostData",
+    "UserDetails",
+    "post_to_markdown",
+    "save_post_as_markdown",
 ]

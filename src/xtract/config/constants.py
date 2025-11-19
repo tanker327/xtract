@@ -2,7 +2,6 @@
 Constants and configuration values for the xtract library.
 """
 
-import logging
 from xtract.config.logging import get_logger
 
 # Create a logger for this module

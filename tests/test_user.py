@@ -1,4 +1,3 @@
-import pytest
 from xtract.models.user import UserDetails
 
 

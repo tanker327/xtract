@@ -4,7 +4,6 @@ File handling utilities for the xtract library.
 
 import os
 import json
-import logging
 from typing import Any
 
 from xtract.config.logging import get_logger

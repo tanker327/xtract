@@ -3,7 +3,6 @@ Utilities for handling media data from X posts.
 """
 
 from typing import List, Dict, Any, Tuple
-import logging
 
 from xtract.config.logging import get_logger
 
@@ -35,6 +34,6 @@ def extract_media_urls(media: List[Dict[str, Any]]) -> Tuple[List[str], List[str
                 if url := best_variant.get("url"):
                     logger.debug(f"Selected best video URL: {url}")
                     videos.append(url)
-    
+
     logger.debug(f"Extracted {len(images)} images and {len(videos)} videos")
     return images, videos

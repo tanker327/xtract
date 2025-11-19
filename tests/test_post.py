@@ -1,4 +1,3 @@
-import pytest
 from xtract.models.post import Post, PostData
 from xtract.models.user import UserDetails
 

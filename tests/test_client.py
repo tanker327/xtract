@@ -3,7 +3,12 @@ import pytest
 import requests
 from unittest.mock import patch, MagicMock, call
 
-from xtract.api.client import get_guest_token, fetch_tweet_data, download_x_post, invalidate_guest_token
+from xtract.api.client import (
+    get_guest_token,
+    fetch_tweet_data,
+    download_x_post,
+    invalidate_guest_token,
+)
 from xtract.api.errors import APIError, TokenExpiredError
 from xtract.models.post import Post
 
@@ -51,7 +56,7 @@ def test_get_guest_token_error(mock_post, mock_exists, mock_ensure_dir):
 
     with pytest.raises(APIError):
         get_guest_token(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
-    
+
     mock_ensure_dir.assert_called_once_with(TEST_CACHE_DIR)
 
 
@@ -66,10 +71,10 @@ def test_get_guest_token_from_cache(mock_exists, mock_json_load, mock_open_func,
     mock_file = MagicMock()
     mock_open_func.return_value.__enter__.return_value = mock_file
     mock_json_load.return_value = {"token": "cached_token"}
-    
+
     # Call the function
     token = get_guest_token(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
-    
+
     # Assertions
     assert token == "cached_token"
     # We now expect exactly one call to exists() for the token file check
@@ -84,24 +89,26 @@ def test_get_guest_token_from_cache(mock_exists, mock_json_load, mock_open_func,
 @patch("builtins.open", new_callable=MagicMock)
 @patch("os.path.exists")
 @patch("requests.post")
-def test_get_guest_token_writes_to_cache(mock_post, mock_exists, mock_open_func, mock_json_dump, mock_ensure_dir, mock_response):
+def test_get_guest_token_writes_to_cache(
+    mock_post, mock_exists, mock_open_func, mock_json_dump, mock_ensure_dir, mock_response
+):
     """Test that a new guest token is written to cache."""
     # Set up mocks
     mock_exists.return_value = False
     mock_post.return_value = mock_response
     mock_file = MagicMock()
     mock_open_func.return_value.__enter__.return_value = mock_file
-    
+
     # Call the function
     token = get_guest_token(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
-    
+
     # Assertions
     assert token == "mock_token"
     mock_post.assert_called_once()
     mock_open_func.assert_called_once()
     mock_json_dump.assert_called_once()
     # First arg should be a dict with 'token' key
-    assert mock_json_dump.call_args[0][0]['token'] == 'mock_token'
+    assert mock_json_dump.call_args[0][0]["token"] == "mock_token"
     mock_ensure_dir.assert_called_once_with(TEST_CACHE_DIR)
 
 
@@ -165,10 +172,10 @@ def test_download_x_post_success(mock_fetch, mock_token, mock_save, mock_dir):
 
     # Call the function
     post = download_x_post(
-        "123456789", 
+        "123456789",
         save_raw_response_to_file=True,
-        token_cache_dir=TEST_CACHE_DIR, 
-        token_cache_filename=TEST_CACHE_FILENAME
+        token_cache_dir=TEST_CACHE_DIR,
+        token_cache_filename=TEST_CACHE_FILENAME,
     )
 
     # Assertions
@@ -191,9 +198,7 @@ def test_download_x_post_guest_token_error(mock_token):
     mock_token.side_effect = APIError("Failed to fetch guest token")
 
     post = download_x_post(
-        "123456789",
-        token_cache_dir=TEST_CACHE_DIR, 
-        token_cache_filename=TEST_CACHE_FILENAME
+        "123456789", token_cache_dir=TEST_CACHE_DIR, token_cache_filename=TEST_CACHE_FILENAME
     )
 
     assert post is None
@@ -208,9 +213,7 @@ def test_download_x_post_fetch_error(mock_fetch, mock_token):
     mock_fetch.side_effect = APIError("Failed to fetch tweet")
 
     post = download_x_post(
-        "123456789",
-        token_cache_dir=TEST_CACHE_DIR, 
-        token_cache_filename=TEST_CACHE_FILENAME
+        "123456789", token_cache_dir=TEST_CACHE_DIR, token_cache_filename=TEST_CACHE_FILENAME
     )
 
     assert post is None
@@ -254,11 +257,11 @@ def test_download_x_post_with_cookies(mock_fetch, mock_token, mock_save, mock_di
 
     # Call the function with cookies
     post = download_x_post(
-        "123456789", 
-        cookies="mock_cookies", 
+        "123456789",
+        cookies="mock_cookies",
         save_raw_response_to_file=True,
-        token_cache_dir=TEST_CACHE_DIR, 
-        token_cache_filename=TEST_CACHE_FILENAME
+        token_cache_dir=TEST_CACHE_DIR,
+        token_cache_filename=TEST_CACHE_FILENAME,
     )
 
     # Assertions
@@ -308,9 +311,7 @@ def test_download_x_post_with_url(mock_fetch, mock_token, mock_save, mock_dir):
     # Call the function with a URL
     url = "https://x.com/testuser/status/123456789"
     post = download_x_post(
-        url,
-        token_cache_dir=TEST_CACHE_DIR, 
-        token_cache_filename=TEST_CACHE_FILENAME
+        url, token_cache_dir=TEST_CACHE_DIR, token_cache_filename=TEST_CACHE_FILENAME
     )
 
     # Assertions
@@ -356,17 +357,19 @@ def test_extract_tweet_id_from_url():
 @patch("xtract.api.client.ensure_directory")
 @patch("os.path.exists")
 @patch("requests.post")
-def test_get_guest_token_with_custom_cache_dir(mock_post, mock_exists, mock_ensure_dir, mock_response):
+def test_get_guest_token_with_custom_cache_dir(
+    mock_post, mock_exists, mock_ensure_dir, mock_response
+):
     """Test guest token retrieval with custom cache directory."""
     # Make sure the cache file doesn't exist
     mock_exists.return_value = False
     mock_post.return_value = mock_response
-    
+
     # Use a custom cache directory and filename
     custom_dir = "/custom/cache/dir"
     custom_filename = "custom_token.json"
     token = get_guest_token(token_cache_dir=custom_dir, token_cache_filename=custom_filename)
-    
+
     # Assertions
     assert token == "mock_token"
     # Verify that it checked for the file in the custom directory with custom filename
@@ -380,10 +383,10 @@ def test_invalidate_guest_token(mock_remove, mock_exists):
     """Test invalidating a cached guest token."""
     # Set up mocks
     mock_exists.return_value = True
-    
+
     # Call function
     invalidate_guest_token(TEST_CACHE_DIR, TEST_CACHE_FILENAME)
-    
+
     # Assertions
     mock_exists.assert_called_once_with(os.path.join(TEST_CACHE_DIR, TEST_CACHE_FILENAME))
     mock_remove.assert_called_once_with(os.path.join(TEST_CACHE_DIR, TEST_CACHE_FILENAME))
@@ -397,18 +400,20 @@ def test_fetch_tweet_data_token_expired(mock_get):
     mock_response.status_code = 403
     mock_response.text = "Forbidden"
     mock_get.return_value = mock_response
-    
+
     # Call function and expect TokenExpiredError
     with pytest.raises(TokenExpiredError):
         fetch_tweet_data("123456789", {"Authorization": "Bearer mock_token"})
 
 
 @patch("xtract.api.client.ensure_directory")
-@patch("xtract.api.client.save_json") 
+@patch("xtract.api.client.save_json")
 @patch("xtract.api.client.fetch_tweet_data")
 @patch("xtract.api.client.invalidate_guest_token")
 @patch("xtract.api.client.get_guest_token")
-def test_download_x_post_token_retry_success(mock_get_token, mock_invalidate, mock_fetch, mock_save, mock_dir):
+def test_download_x_post_token_retry_success(
+    mock_get_token, mock_invalidate, mock_fetch, mock_save, mock_dir
+):
     """Test successful retry after token expiration."""
     # First call fails with token expiration, second succeeds
     mock_get_token.side_effect = ["expired_token", "new_token"]
@@ -420,30 +425,30 @@ def test_download_x_post_token_retry_success(mock_get_token, mock_invalidate, mo
                     "result": {
                         "rest_id": "123456789",
                         "legacy": {"full_text": "Test tweet"},
-                        "core": {"user_results": {"result": {"legacy": {"screen_name": "testuser"}}}},
+                        "core": {
+                            "user_results": {"result": {"legacy": {"screen_name": "testuser"}}}
+                        },
                         "note_tweet": {"note_tweet_results": {"result": {}}},
                     }
                 }
             }
-        }
+        },
     ]
-    
+
     # Call the function
     post = download_x_post(
-        "123456789",
-        token_cache_dir=TEST_CACHE_DIR,
-        token_cache_filename=TEST_CACHE_FILENAME
+        "123456789", token_cache_dir=TEST_CACHE_DIR, token_cache_filename=TEST_CACHE_FILENAME
     )
-    
+
     # Assertions
     assert isinstance(post, Post)
     assert post.tweet_id == "123456789"
-    
+
     # Verify the retry logic happened
     assert mock_get_token.call_count == 2
     assert mock_invalidate.call_count == 1
     assert mock_fetch.call_count == 2
-    
+
     # Verify the second call had force_refresh=True
     assert mock_get_token.call_args_list[0] == call(TEST_CACHE_DIR, TEST_CACHE_FILENAME, False)
     assert mock_get_token.call_args_list[1] == call(TEST_CACHE_DIR, TEST_CACHE_FILENAME, True)
@@ -453,23 +458,25 @@ def test_download_x_post_token_retry_success(mock_get_token, mock_invalidate, mo
 @patch("xtract.api.client.fetch_tweet_data")
 @patch("xtract.api.client.invalidate_guest_token")
 @patch("xtract.api.client.get_guest_token")
-def test_download_x_post_max_retries_exceeded(mock_get_token, mock_invalidate, mock_fetch, mock_dir):
+def test_download_x_post_max_retries_exceeded(
+    mock_get_token, mock_invalidate, mock_fetch, mock_dir
+):
     """Test giving up after max retries for token expiration."""
     # All calls fail with token expiration
     mock_get_token.return_value = "expired_token"
     mock_fetch.side_effect = TokenExpiredError("Token expired")
-    
+
     # Call the function with max_retries=2
     post = download_x_post(
         "123456789",
         token_cache_dir=TEST_CACHE_DIR,
         token_cache_filename=TEST_CACHE_FILENAME,
-        max_retries=2
+        max_retries=2,
     )
-    
+
     # Assertions
     assert post is None  # Should return None after giving up
-    
+
     # Verify retry counts
     assert mock_get_token.call_count == 2  # Initial + 1 retry
     assert mock_invalidate.call_count == 1  # One invalidation after first failure

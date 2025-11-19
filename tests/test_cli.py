@@ -188,9 +188,11 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
 
         # Setup mock download function
         mock_download.return_value = mock_post
-        
+
         # Setup mock save_post_as_markdown function
-        mock_save_markdown.return_value = os.path.join(temp_dir, "x_post_123456789", "tweet_123456789.md")
+        mock_save_markdown.return_value = os.path.join(
+            temp_dir, "x_post_123456789", "tweet_123456789.md"
+        )
 
         # Run the CLI
         with patch("sys.stdout"):  # Suppress output
@@ -200,7 +202,7 @@ def test_cli_with_markdown(mock_save_markdown, mock_args, mock_download, mock_po
         mock_download.assert_called_once_with(
             "123456789", output_dir=temp_dir, cookies=None, save_raw_response_to_file=False
         )
-        
+
         # Verify the save_post_as_markdown function was called with correct parameters
         expected_tweet_dir = os.path.join(temp_dir, "x_post_123456789")
         mock_save_markdown.assert_called_once_with(mock_post, output_dir=expected_tweet_dir)
