@@ -121,6 +121,21 @@ class Post:
                 logger.debug("Using URL entities from note_tweet entity_set")
                 url_entities = note_urls
 
+        # Add media URLs to url_entities (media t.co links also need expansion)
+        # Media URLs are in extended_entities.media, not in entities.urls
+        # Replace t.co links with direct media URLs (media_url_https) instead of expanded_url
+        media_items = legacy.get("extended_entities", {}).get("media", [])
+        if media_items:
+            logger.debug(f"Found {len(media_items)} media items with potential t.co URLs")
+            for media in media_items:
+                media_url = media.get("url")
+                media_url_https = media.get("media_url_https")
+                if media_url and media_url_https:
+                    # Add media URL to entities list for expansion
+                    # Use media_url_https (direct media file) instead of expanded_url (permalink)
+                    url_entities.append({"url": media_url, "expanded_url": media_url_https})
+                    logger.debug(f"Added media URL for expansion: {media_url} -> {media_url_https}")
+
         # Expand t.co URLs to their original form
         try:
             if url_entities:
